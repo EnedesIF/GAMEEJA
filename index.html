@@ -339,6 +339,30 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
 
 <script>
 // ════════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ════════════════════════════════════════════════════════
+const SUPA_URL = 'https://zrahlmmwywbyklciqxfk.supabase.co';
+const SUPA_KEY = 'sb_publishable_SHHOkIqEtS4LkMUK-AtFmw_noc_ZK2y';
+
+async function sbFetch(path, method='GET', body=null){
+  const opts = {
+    method,
+    headers:{
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer '+SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method==='POST' ? 'resolution=merge-duplicates' : ''
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(SUPA_URL+path, opts);
+    if(!r.ok){ const t=await r.text(); console.warn('Supabase:',t); return null; }
+    return r.status===204 ? true : r.json();
+  } catch(e){ console.warn('Supabase offline:',e); return null; }
+}
+
+// ════════════════════════════════════════════════════════
 //  DATA
 // ════════════════════════════════════════════════════════
 
@@ -644,14 +668,17 @@ const PHASE2_MISSION = {
 
 // ════════════════════════════════════════════════════════
 //  STATE
+
+// ════════════════════════════════════════════════════════
+//  STATE
 // ════════════════════════════════════════════════════════
 let STATE = {
   group: null,
   phase: 1,
   scenarioIdx: 0,
   qIdx: 0,
-  answers: {},      // qId -> answerIdx or text
-  scores: {},       // qId -> pts earned
+  answers: {},
+  scores: {},
   totalScore: 0,
   phase1Done: false,
   phase2Done: false,
@@ -661,12 +688,12 @@ let STATE = {
   startTime: Date.now()
 };
 
-// Per-group persistent data (simulates "other groups playing")
+// Local cache of all groups for prof panel
 let ALL_GROUPS = {
-  1:{score:0,phase:1,correct:0,total:0,answers:{}},
-  2:{score:0,phase:1,correct:0,total:0,answers:{}},
-  3:{score:0,phase:1,correct:0,total:0,answers:{}},
-  4:{score:0,phase:1,correct:0,total:0,answers:{}}
+  1:{score:0,phase:1,correct:0,total:0},
+  2:{score:0,phase:1,correct:0,total:0},
+  3:{score:0,phase:1,correct:0,total:0},
+  4:{score:0,phase:1,correct:0,total:0}
 };
 
 // ════════════════════════════════════════════════════════
@@ -777,12 +804,12 @@ function renderScenario(sIdx, qIdx){
     </div>`;
 
   updateSidebar();
-  updateGroupData();
+  saveProgressToSupabase();
 }
 
 function selectOption(sIdx, qIdx, optIdx){
   const q = PHASE1_SCENARIOS[sIdx].questions[qIdx];
-  if(STATE.answers[q.id] !== undefined) return; // already answered
+  if(STATE.answers[q.id] !== undefined) return;
 
   STATE.answers[q.id] = optIdx;
   const correct = optIdx === q.correct;
@@ -790,12 +817,8 @@ function selectOption(sIdx, qIdx, optIdx){
   STATE.scores[q.id] = pts;
   STATE.totalScore += pts;
 
-  // update group data
-  ALL_GROUPS[STATE.group].score = STATE.totalScore;
-  ALL_GROUPS[STATE.group].total++;
-  if(correct) ALL_GROUPS[STATE.group].correct++;
-
   showToast(correct?`✅ Correto! +${pts} pontos`:`❌ Não foi dessa vez. +${pts} ponto`, correct?'success':'error');
+  saveProgressToSupabase();
   renderScenario(sIdx, qIdx);
 }
 
@@ -985,14 +1008,11 @@ function submitOpenAnswer(qId, pts, qIdx){
     return;
   }
   STATE.answers[qId] = val;
-  STATE.scores[qId] = pts; // full pts for open (teacher grades later, give full for engagement)
+  STATE.scores[qId] = pts;
   STATE.totalScore += pts;
-  ALL_GROUPS[STATE.group].score = STATE.totalScore;
-  ALL_GROUPS[STATE.group].total++;
-  ALL_GROUPS[STATE.group].correct++;
   showToast(`✅ Resposta salva! +${pts} pontos`, 'success');
+  saveProgressToSupabase();
   renderPhase2Questions(qIdx);
-  updateGroupData();
 }
 
 function finishPhase2(){
@@ -1049,7 +1069,7 @@ function showFinalResult(){
       </div>
     </div>`;
 
-  updateGroupData();
+  saveProgressToSupabase();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1131,28 +1151,6 @@ function showToast(msg, type='info'){
 // ════════════════════════════════════════════════════════
 //  GROUP DATA (simulates other groups for professor panel)
 // ════════════════════════════════════════════════════════
-function updateGroupData(){
-  ALL_GROUPS[STATE.group].score = STATE.totalScore;
-  ALL_GROUPS[STATE.group].phase = STATE.phase;
-  ALL_GROUPS[STATE.group].correct = Object.keys(STATE.scores).filter(k=>{
-    const q = findQuestion(k);
-    return q && q.type!=='open' && STATE.answers[k]===q.correct;
-  }).length;
-  ALL_GROUPS[STATE.group].total = Object.keys(STATE.answers).length;
-
-  // Simulate other groups with gradual progress
-  const now = Date.now();
-  const elapsed = (now - STATE.startTime)/1000;
-  [1,2,3,4].forEach(g=>{
-    if(g===STATE.group) return;
-    const seed = g*137 + Math.floor(elapsed/30);
-    ALL_GROUPS[g].score = Math.min(180, Math.floor((seed%60)*2.5 + elapsed*0.3));
-    ALL_GROUPS[g].phase = ALL_GROUPS[g].score > 120 ? 2 : 1;
-    ALL_GROUPS[g].correct = Math.floor(ALL_GROUPS[g].score/20);
-    ALL_GROUPS[g].total = ALL_GROUPS[g].correct + Math.floor(Math.random()*2);
-  });
-}
-
 function findQuestion(id){
   for(const s of PHASE1_SCENARIOS) for(const q of s.questions) if(q.id===id) return q;
   for(const q of PHASE2_MISSION.questions) if(q.id===id) return q;
@@ -1160,26 +1158,76 @@ function findQuestion(id){
 }
 
 // ════════════════════════════════════════════════════════
+//  SUPABASE SYNC
+// ════════════════════════════════════════════════════════
+async function saveProgressToSupabase(){
+  if(!STATE.group) return;
+  const correct = Object.keys(STATE.scores).filter(k=>{
+    const q = findQuestion(k);
+    return q && q.type!=='open' && STATE.answers[k]===q.correct;
+  }).length;
+  const total = Object.keys(STATE.answers).length;
+  const openAnswers = {};
+  PHASE2_MISSION.questions.forEach(q=>{
+    if(STATE.answers[q.id]) openAnswers[q.id] = STATE.answers[q.id];
+  });
+  await sbFetch('/rest/v1/game_progress', 'POST', {
+    grupo: STATE.group,
+    grupo_nome: GROUPS[STATE.group].name,
+    pontuacao: STATE.totalScore,
+    fase: STATE.phase,
+    acertos: correct,
+    total_respondidas: total,
+    negocio_escolhido: STATE.selectedBusiness || '',
+    respostas_abertas: openAnswers,
+    fase1_concluida: STATE.phase1Done,
+    fase2_concluida: STATE.phase2Done,
+    atualizado_em: new Date().toISOString()
+  });
+}
+
+async function loadAllGroupsFromSupabase(){
+  const data = await sbFetch('/rest/v1/game_progress?select=*&order=grupo.asc');
+  if(!Array.isArray(data)) return;
+  data.forEach(row=>{
+    ALL_GROUPS[row.grupo] = {
+      score: row.pontuacao || 0,
+      phase: row.fase || 1,
+      correct: row.acertos || 0,
+      total: row.total_respondidas || 0,
+      negocio: row.negocio_escolhido || '',
+      respostas: row.respostas_abertas || {},
+      fase1Done: row.fase1_concluida || false,
+      fase2Done: row.fase2_concluida || false
+    };
+  });
+}
+
+// ════════════════════════════════════════════════════════
 //  PROFESSOR PANEL
 // ════════════════════════════════════════════════════════
+let profRefreshInterval = null;
+
 function openProfPanel(){
   document.getElementById('lobby').style.display='none';
   document.getElementById('app').style.display='none';
   document.getElementById('prof-panel').style.display='block';
   renderProfPanel();
-  // Auto-refresh
-  setInterval(()=>{
+  if(profRefreshInterval) clearInterval(profRefreshInterval);
+  profRefreshInterval = setInterval(()=>{
     if(document.getElementById('prof-panel').style.display==='block') renderProfPanel();
-  },5000);
+  },4000);
 }
 
 function closeProfPanel(){
+  if(profRefreshInterval){ clearInterval(profRefreshInterval); profRefreshInterval=null; }
   document.getElementById('prof-panel').style.display='none';
   document.getElementById('lobby').style.display='flex';
 }
 
-function renderProfPanel(){
-  updateGroupData();
+async function renderProfPanel(){
+  await loadAllGroupsFromSupabase();
+
   const sorted = [1,2,3,4].map(g=>({g,d:ALL_GROUPS[g]})).sort((a,b)=>b.d.score-a.d.score);
   const rankClasses=['gold','silver','bronze',''];
 
@@ -1192,10 +1240,10 @@ function renderProfPanel(){
       <div class="lb-rank ${rankClasses[i]}">${['🥇','🥈','🥉','4º'][i]}</div>
       <div>
         <div class="lb-group" style="color:${grp.color}">${grp.icon} ${grp.name}</div>
-        <div class="lb-phase">FASE ${d.phase} · ${d.total} respondidas</div>
+        <div class="lb-phase">FASE ${d.phase||1} · ${d.total||0} respondidas</div>
       </div>
       <div>
-        <div class="lb-score" style="color:${grp.color}">${d.score}</div>
+        <div class="lb-score" style="color:${grp.color}">${d.score||0}</div>
         <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);text-align:right;">pts</div>
       </div>
       <div>
@@ -1205,30 +1253,51 @@ function renderProfPanel(){
     </div>`;
   }).join('');
 
-  // Group panels
-  const maxScore = 350; // approximate max
+  // Group panels with open answers
+  const maxScore = 350;
   document.getElementById('prof-grid').innerHTML = [1,2,3,4].map(g=>{
     const grp = GROUPS[g];
     const d = ALL_GROUPS[g];
     const acc = d.total>0?Math.round(d.correct/d.total*100):0;
-    const pct = Math.round(d.score/maxScore*100);
+    const pct = Math.round((d.score||0)/maxScore*100);
+    const resps = d.respostas || {};
+    const hasResps = Object.keys(resps).length > 0;
+
+    const respHtml = hasResps ? `
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+        <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">📝 Respostas Abertas</div>
+        ${PHASE2_MISSION.questions.map((q,i)=>{
+          const r = resps[q.id];
+          if(!r) return '';
+          return `<div style="margin-bottom:8px;padding:8px;background:var(--surf);border:1px solid var(--border);border-radius:6px;border-left:3px solid ${grp.color};">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px;">Q${i+1}: ${q.text.substring(0,50)}...</div>
+            <div style="font-size:12px;color:var(--mid);line-height:1.5;">${r}</div>
+          </div>`;
+        }).join('')}
+      </div>` : '';
+
     return `<div class="group-panel">
       <div class="gp-header" style="background:${grp.color}">
         <div>
           <div class="gp-name">${grp.icon} ${grp.name}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;">${grp.role}</div>
         </div>
-        <div class="gp-score-big">${d.score}</div>
+        <div class="gp-score-big">${d.score||0}</div>
       </div>
       <div class="gp-body">
         <div class="prog-bar-wrap" style="margin-bottom:12px;">
           <div class="prog-bar-fill" style="width:${pct}%;background:${grp.color};"></div>
         </div>
-        <div class="gp-stat-row"><span class="gp-stat-lbl">Fase atual</span><span class="gp-stat-val">Fase ${d.phase}</span></div>
-        <div class="gp-stat-row"><span class="gp-stat-lbl">Questões respondidas</span><span class="gp-stat-val">${d.total}</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Fase atual</span><span class="gp-stat-val">Fase ${d.phase||1}</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Questões respondidas</span><span class="gp-stat-val">${d.total||0}</span></div>
         <div class="gp-stat-row"><span class="gp-stat-lbl">Taxa de acerto</span><span class="gp-stat-val">${acc}%</span></div>
-        <div class="gp-stat-row"><span class="gp-stat-lbl">Pontuação</span><span class="gp-stat-val" style="color:${grp.color}">${d.score} pts</span></div>
-        ${g===STATE.group?`<div style="margin-top:10px;"><span class="tag tag-green">▶ Jogando agora</span></div>`:''}
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Negócio escolhido</span><span class="gp-stat-val">${d.negocio||'—'}</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Pontuação</span><span class="gp-stat-val" style="color:${grp.color};font-weight:700;">${d.score||0} pts</span></div>
+        ${d.fase2Done?'<div style="margin-top:8px;"><span class="tag tag-green">✅ Concluído</span></div>':
+          d.fase1Done?'<div style="margin-top:8px;"><span class="tag tag-yellow">🎯 Na Fase 2</span></div>':
+          d.total>0?'<div style="margin-top:8px;"><span style="font-size:11px;color:var(--muted);">▶ Jogando Fase 1</span></div>':
+          '<div style="margin-top:8px;"><span style="font-size:11px;color:var(--dim);">⏳ Aguardando...</span></div>'}
+        ${respHtml}
       </div>
     </div>`;
   }).join('');
@@ -1238,8 +1307,7 @@ function renderProfPanel(){
 //  INIT
 // ════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
-  // Pre-simulate other groups
-  updateGroupData();
+  // ready
 });
 </script>
 </body>
