@@ -1099,6 +1099,8 @@ function startGame(){
 
 function goFromInstructions(){
   resumeAC();
+  // Lê turma e participantes antes de esconder o lobby
+  updateTeamForm();
   document.getElementById('instructions').style.display='none';
   const appEl = document.getElementById('app');
   appEl.style.display='block';
@@ -1107,6 +1109,8 @@ function goFromInstructions(){
   badge.textContent = grp.icon+' '+grp.name;
   badge.style.background = grp.color;
   badge.style.color = '#fff';
+  // Salva turma e participantes imediatamente no Supabase
+  saveIdentificacao();
   initPhase1();
 }
 
@@ -1212,6 +1216,27 @@ function renderPersonaPhase(sIdx){
   updateSidebar();
 }
 
+// Salva só identificação (turma + participantes) — chamado logo ao iniciar
+async function saveIdentificacao(){
+  if(!STATE.group) return;
+  await sbFetch('/rest/v1/game_progress', 'POST', {
+    grupo: STATE.group,
+    grupo_nome: GROUPS[STATE.group].name,
+    turma: STATE.turma || '',
+    participantes: STATE.participantes || [],
+    pontuacao: 0,
+    fase: 1,
+    acertos: 0,
+    total_respondidas: 0,
+    negocio_escolhido: '',
+    respostas_abertas: {},
+    personas: {},
+    fase1_concluida: false,
+    fase2_concluida: false,
+    atualizado_em: new Date().toISOString()
+  });
+}
+
 function savePersona(sIdx){
   const sc = PHASE1_SCENARIOS[sIdx];
   const pKey = 'persona_'+sc.id;
@@ -1220,15 +1245,58 @@ function savePersona(sIdx){
     const el = document.getElementById('pf-'+f.id);
     if(el) data[f.id] = el.value.trim();
   });
+
+  // Verifica se tem pelo menos nome preenchido
+  if(!data.nome){
+    showToast('✍️ Coloque pelo menos o nome da persona!', 'error');
+    return;
+  }
+
   STATE.answers[pKey] = data;
-  saveProgressToSupabase();
+
+  // Salva personas em campo dedicado
+  savePersonasToSupabase();
   showToast('✅ Persona salva!', 'success');
+  SFX.openSave();
 
   if(sIdx < PHASE1_SCENARIOS.length-1){
     renderPersonaPhase(sIdx+1);
   } else {
     startPhase1Questions();
   }
+}
+
+// Salva TODAS as personas preenchidas até agora em campo dedicado
+async function savePersonasToSupabase(){
+  if(!STATE.group) return;
+  const personas = {};
+  PHASE1_SCENARIOS.forEach(sc=>{
+    const pKey = 'persona_'+sc.id;
+    if(STATE.answers[pKey]) personas[sc.id] = STATE.answers[pKey];
+  });
+  await sbFetch('/rest/v1/game_progress', 'POST', {
+    grupo: STATE.group,
+    grupo_nome: GROUPS[STATE.group].name,
+    turma: STATE.turma || '',
+    participantes: STATE.participantes || [],
+    pontuacao: STATE.totalScore,
+    fase: STATE.phase,
+    acertos: Object.keys(STATE.scores).filter(k=>{
+      const q = findQuestion(k);
+      return q && q.type!=='open' && STATE.answers[k]===q.correct;
+    }).length,
+    total_respondidas: Object.keys(STATE.answers).length,
+    negocio_escolhido: STATE.selectedBusiness || '',
+    respostas_abertas: (() => {
+      const o = {};
+      PHASE2_MISSION.questions.forEach(q=>{ if(STATE.answers[q.id]) o[q.id]=STATE.answers[q.id]; });
+      return o;
+    })(),
+    personas,
+    fase1_concluida: STATE.phase1Done,
+    fase2_concluida: STATE.phase2Done,
+    atualizado_em: new Date().toISOString()
+  });
 }
 
 function skipAllPersonas(){
@@ -1730,6 +1798,12 @@ async function saveProgressToSupabase(){
   PHASE2_MISSION.questions.forEach(q=>{
     if(STATE.answers[q.id]) openAnswers[q.id] = STATE.answers[q.id];
   });
+  // Coleta personas salvas
+  const personas = {};
+  PHASE1_SCENARIOS.forEach(sc=>{
+    const pKey = 'persona_'+sc.id;
+    if(STATE.answers[pKey]) personas[sc.id] = STATE.answers[pKey];
+  });
   await sbFetch('/rest/v1/game_progress', 'POST', {
     grupo: STATE.group,
     grupo_nome: GROUPS[STATE.group].name,
@@ -1741,6 +1815,7 @@ async function saveProgressToSupabase(){
     total_respondidas: total,
     negocio_escolhido: STATE.selectedBusiness || '',
     respostas_abertas: openAnswers,
+    personas,
     fase1_concluida: STATE.phase1Done,
     fase2_concluida: STATE.phase2Done,
     atualizado_em: new Date().toISOString()
@@ -1758,6 +1833,7 @@ async function loadAllGroupsFromSupabase(){
       total: row.total_respondidas || 0,
       negocio: row.negocio_escolhido || '',
       respostas: row.respostas_abertas || {},
+      personas: row.personas || {},
       fase1Done: row.fase1_concluida || false,
       fase2Done: row.fase2_concluida || false,
       turma: row.turma || '',
@@ -1863,6 +1939,21 @@ async function renderProfPanel(){
           <div style="display:flex;flex-wrap:wrap;gap:5px;">
             ${d.participantes.map(n=>`<span style="background:${grp.color}18;border:1px solid ${grp.color}44;color:${grp.color};padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;">${n}</span>`).join('')}
           </div>
+        </div>` : ''}
+        ${d.personas && Object.keys(d.personas).length > 0 ? `
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">🧑‍💼 Personas Criadas</div>
+          ${Object.entries(d.personas).map(([scId, p])=>{
+            const sc = PHASE1_SCENARIOS.find(s=>s.id===scId);
+            return `<div style="background:var(--surf);border:1px solid var(--border);border-left:3px solid ${grp.color};border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:6px;">
+              <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;">${sc?sc.icon+' '+sc.name:'Cenário'}</div>
+              ${p.nome?`<div style="font-size:12px;font-weight:700;color:var(--dark);">👤 ${p.nome}</div>`:''}
+              ${p.idade?`<div style="font-size:11px;color:var(--muted);">🎂 ${p.idade}</div>`:''}
+              ${p.dor?`<div style="font-size:11px;color:var(--mid);margin-top:3px;">😟 <em>${p.dor}</em></div>`:''}
+              ${p.desejo?`<div style="font-size:11px;color:var(--mid);">💚 ${p.desejo}</div>`:''}
+              ${p.frase?`<div style="font-size:11px;color:${grp.color};font-style:italic;margin-top:3px;">"${p.frase}"</div>`:''}
+            </div>`;
+          }).join('')}
         </div>` : ''}
         ${d.fase2Done?'<div style="margin-top:8px;"><span class="tag tag-green">✅ Concluído</span></div>':
           d.fase1Done?'<div style="margin-top:8px;"><span class="tag tag-yellow">🎯 Na Fase 2</span></div>':
