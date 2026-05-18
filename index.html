@@ -57,7 +57,9 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 .app-body{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px);}
-@media(max-width:768px){.app-body{grid-template-columns:1fr;}}
+@media(max-width:600px){.app-body{grid-template-columns:1fr;} .sidebar{display:none;}}
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;}
+@media(max-width:600px){.persona-grid{grid-template-columns:1fr;}}
 
 /* ── SIDEBAR ── */
 .sidebar{background:#fff;border-right:1px solid var(--border);padding:0;overflow-y:auto;}
@@ -231,6 +233,35 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
 .tag-yellow{background:var(--ifb-yellow-faint);color:#E65100;border:1px solid var(--ifb-yellow-mid);}
 .tag-red{background:var(--red-faint);color:var(--red);border:1px solid var(--red-mid);}
 .divider{height:1px;background:var(--border);margin:20px 0;}
+/* ── AVATAR ── */
+#avatar-container{position:fixed;bottom:24px;right:24px;z-index:200;display:none;flex-direction:column;align-items:center;gap:0;}
+.avatar-bubble{background:#fff;border:2px solid var(--border);border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:12px;color:var(--mid);line-height:1.5;max-width:190px;box-shadow:var(--shadow-md);margin-bottom:6px;position:relative;animation:bubblePop .3s ease;}
+.avatar-bubble::after{content:'';position:absolute;bottom:-10px;right:14px;border:5px solid transparent;border-top-color:var(--border);}
+.avatar-bubble::before{content:'';position:absolute;bottom:-8px;right:15px;border:4px solid transparent;border-top-color:#fff;z-index:1;}
+.avatar-body{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:var(--shadow-md);border:3px solid #fff;cursor:pointer;transition:transform .2s;background:#fff;}
+.avatar-body:hover{transform:scale(1.08);}
+.avatar-name{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+@keyframes bubblePop{from{opacity:0;transform:scale(.8) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes avatarBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.avatar-bounce{animation:avatarBounce .5s ease 2;}
+@keyframes avatarShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.avatar-shake{animation:avatarShake .4s ease;}
+
+/* ── LIVES BAR ── */
+#lives-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.95);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.life-heart{font-size:16px;transition:all .3s;}
+.life-heart.lost{filter:grayscale(1);opacity:.3;transform:scale(.8);}
+.lives-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.annul-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:4px;display:none;}
+.annul-badge.show{display:inline-block;animation:badgePop .4s ease;}
+@keyframes badgePop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* ── SCORE POP ── */
+.score-pop{position:fixed;font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;pointer-events:none;z-index:999;animation:scorePop .9s ease forwards;}
+@keyframes scorePop{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.4)}}
+
+/* ── SCREEN FLASH ── */
+#screen-flash{position:fixed;inset:0;z-index:998;pointer-events:none;opacity:0;}
 </style>
 </head>
 <body>
@@ -271,14 +302,93 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
   <button class="prof-btn" onclick="openProfPanel()">🎓 Painel do Professor</button>
 </div>
 
+<!-- ══════════════════════════════════════════════ INSTRUÇÕES ══ -->
+<div id="instructions" style="display:none;">
+  <div style="min-height:100vh;background:linear-gradient(145deg,#1B5E20 0%,#2E7D32 60%,#1A237E 100%);padding:40px 20px;display:flex;flex-direction:column;align-items:center;">
+    <div style="max-width:720px;width:100%;">
+
+      <div style="text-align:center;margin-bottom:32px;">
+        <div class="lobby-badge" style="display:inline-block;margin-bottom:16px;">📚 IFB · PROEJA Marketing</div>
+        <h1 class="lobby-title" style="font-size:clamp(28px,5vw,52px);">Como funciona<br><span>o jogo?</span></h1>
+      </div>
+
+      <!-- Fase 0 -->
+      <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+          <div style="width:40px;height:40px;background:var(--ifb-yellow);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">0</div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#fff;font-weight:600;">FASE 0 — Mapeamento de Persona</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;">⏱ 10 minutos · Por cenário</div>
+          </div>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.7;">Antes de responder qualquer questão, vocês irão <strong style="color:var(--ifb-yellow);">construir a Persona</strong> do negócio que estão analisando. Quem é o cliente ideal? Qual é a dor dele? O que ele busca? Essa etapa conecta a teoria de Comportamento do Consumidor com a realidade do negócio.</p>
+      </div>
+
+      <!-- Fase 1 -->
+      <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+          <div style="width:40px;height:40px;background:#1565C0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;">1</div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#fff;font-weight:600;">FASE 1 — Diagnóstico</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;">⏱ 25 minutos · 4 cenários × 3 questões</div>
+          </div>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.7;">Vocês analisam <strong style="color:var(--ifb-yellow);">4 negócios reais</strong> do DF com problemas diferentes: baixa visitação, preço percebido como caro, alta rotatividade de funcionários e zero presença digital. Para cada negócio, respondem 3 questões de múltipla escolha. Cada questão tem uma explicação pedagógica que conecta a resposta com as disciplinas do curso.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <span style="background:rgba(249,168,37,.2);border:1px solid rgba(249,168,37,.4);color:var(--ifb-yellow);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">✅ Acerto = pontuação cheia</span>
+          <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:3px 10px;border-radius:20px;font-size:11px;">❌ Erro = 10% dos pontos</span>
+          <span style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:3px 10px;border-radius:20px;font-size:11px;">💡 Sempre leia a explicação!</span>
+        </div>
+      </div>
+
+      <!-- Fase 2 -->
+      <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+          <div style="width:40px;height:40px;background:#6A1B9A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;font-family:'Oswald',sans-serif;font-weight:700;">2</div>
+          <div>
+            <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#fff;font-weight:600;">FASE 2 — Consultoria</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;">⏱ 30 minutos · 5 questões abertas</div>
+          </div>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.7;">Agora vocês são <strong style="color:var(--ifb-yellow);">consultores de verdade</strong>! Escolhem um negócio (academia, salão ou mercadinho) e montam um plano de marketing completo: Persona, análise SWOT simplificada, ação digital prioritária, estratégia de fidelização e criação de slogan. As respostas ficam salvas e o professor acompanha em tempo real.</p>
+      </div>
+
+      <!-- Regras -->
+      <div style="background:rgba(249,168,37,.15);border:1px solid rgba(249,168,37,.35);border-radius:12px;padding:16px 20px;margin-bottom:28px;">
+        <div style="font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--ifb-yellow);margin-bottom:10px;">📋 Regras do Jogo</div>
+        <ul style="font-size:13px;color:rgba(255,255,255,.85);line-height:2;padding-left:16px;">
+          <li>Cada grupo joga no seu próprio dispositivo</li>
+          <li>Discutam as respostas antes de clicar — é trabalho em equipe!</li>
+          <li>Nas questões abertas, sejam específicos — respostas genéricas não pontuam</li>
+          <li>O professor pode ver tudo no Painel do Professor em tempo real</li>
+          <li>Ao final, cada grupo apresenta suas soluções para a turma</li>
+        </ul>
+      </div>
+
+      <div style="text-align:center;">
+        <button class="lobby-btn" onclick="goFromInstructions()">🚀 ENTENDIDO — COMEÇAR!</button>
+        <div style="margin-top:12px;">
+          <button onclick="goBackToLobby()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;text-decoration:underline;">← Voltar e trocar de grupo</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════ APP ══ -->
 <div id="app">
   <header class="app-header">
     <div class="app-logo">Marketing <span>na Prática</span></div>
     <div class="header-group">
       <span class="group-badge" id="header-group-badge">—</span>
-      <span class="phase-pill" id="header-phase">FASE 1</span>
-      <span class="timer-display" id="timer-display">--:--</span>
+      <span class="phase-pill" id="header-phase">FASE 0</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+        <span class="timer-display" id="timer-display">--:--</span>
+        <div style="width:80px;height:3px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;">
+          <div id="timer-bar" style="height:3px;background:var(--ifb-yellow);border-radius:2px;width:100%;transition:width 1s linear;"></div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -297,6 +407,10 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
             <span id="sb-q-done">0</span><span id="sb-q-total">/ 0</span>
           </div>
         </div>
+      </div>
+
+      <div class="sb-section" id="sb-lives">
+        <!-- lives bar rendered by JS -->
       </div>
 
       <div class="sb-section">
@@ -336,6 +450,16 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
 
 <!-- TOAST -->
 <div id="toast" style="display:none;" class="toast"></div>
+
+<!-- ── AVATAR ── -->
+<div id="avatar-container">
+  <div class="avatar-bubble" id="avatar-bubble">Olá! Prontos para me ajudar? 💪</div>
+  <div class="avatar-body" id="avatar-body" onclick="avatarSpeak()">🧑‍💼</div>
+  <div class="avatar-name" id="avatar-name">Cliente</div>
+</div>
+
+<!-- ── SCREEN FLASH ── -->
+<div id="screen-flash"></div>
 
 <script>
 // ════════════════════════════════════════════════════════
@@ -684,8 +808,15 @@ let STATE = {
   phase2Done: false,
   selectedBusiness: null,
   timerSec: 0,
+  timerTotal: 0,
   timerInterval: null,
-  startTime: Date.now()
+  startTime: Date.now(),
+  // ── MECÂNICAS NOVAS
+  wrongStreak: 0,      // erros consecutivos (3 = anula 1 certa)
+  livesLost: 0,        // quantas anulações aconteceram
+  totalWrong: 0,       // erros totais
+  avatarMood: 'idle',  // idle | happy | sad | worried | celebrate
+  currentAvatar: null  // avatar do cenário atual
 };
 
 // Local cache of all groups for prof panel
@@ -697,8 +828,219 @@ let ALL_GROUPS = {
 };
 
 // ════════════════════════════════════════════════════════
-//  LOBBY
+//  SOUND ENGINE (Web Audio API — sem arquivos externos)
 // ════════════════════════════════════════════════════════
+const AC = (()=>{ try{ return new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ return null; } })();
+
+function playTone(freq, type='sine', dur=0.15, vol=0.3, delay=0){
+  if(!AC) return;
+  try{
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    o.type=type; o.frequency.setValueAtTime(freq, AC.currentTime+delay);
+    g.gain.setValueAtTime(vol, AC.currentTime+delay);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+delay+dur);
+    o.start(AC.currentTime+delay); o.stop(AC.currentTime+delay+dur);
+  } catch(e){}
+}
+
+function resumeAC(){ if(AC && AC.state==='suspended') AC.resume(); }
+
+const SFX = {
+  correct(){
+    playTone(523,  'sine', .1, .3, 0);
+    playTone(659,  'sine', .1, .3, .1);
+    playTone(784,  'sine', .2, .3, .2);
+  },
+  wrong(){
+    playTone(330, 'sawtooth', .08, .25, 0);
+    playTone(220, 'sawtooth', .18, .25, .08);
+  },
+  annul(){
+    playTone(440,'square',.05,.2,0);
+    playTone(330,'square',.05,.2,.06);
+    playTone(220,'square',.15,.2,.12);
+    playTone(110,'square',.3,.3,.18);
+  },
+  phaseComplete(){
+    [523,659,784,1047].forEach((f,i)=>playTone(f,'sine',.18,.3,i*.12));
+  },
+  timerUrgent(){
+    playTone(880,'square',.06,.15,0);
+    playTone(880,'square',.06,.15,.18);
+  },
+  tick(){
+    playTone(1200,'square',.04,.08,0);
+  },
+  openSave(){
+    playTone(440,'sine',.1,.2,0);
+    playTone(660,'sine',.15,.2,.1);
+  },
+  gameOver(){
+    playTone(330,'sawtooth',.2,.3,0);
+    playTone(247,'sawtooth',.2,.3,.2);
+    playTone(185,'sawtooth',.4,.3,.4);
+  }
+};
+
+// ════════════════════════════════════════════════════════
+//  AVATAR ENGINE
+// ════════════════════════════════════════════════════════
+const SCENARIO_AVATARS = {
+  s1:{ emoji:'👟', name:'Fernanda', role:'Gerente da Corre & Cia',
+       idle:   ['Estou contando com vocês! 🙏','Nossa vitrine tá precisando de ajuda...','Os vendedores estão desmotivados 😞'],
+       happy:  ['Isso aí! Exatamente o que precisávamos! 🎉','Ótima resposta! Vou implementar isso!','Vocês são ótimos consultores! 💪'],
+       sad:    ['Hmm... não tenho certeza se funcionaria...','Isso pode piorar nossa situação 😟','Acho que não é bem isso...'],
+       worried:['Cuidado! Pense bem antes de responder','Não se apressem... é uma decisão importante','3 erros e minha loja vai tomar um desconto! 😨']
+  },
+  s2:{ emoji:'🥐', name:'Dona Maria', role:'Padaria Pão Nosso',
+       idle:   ['Meu pão é artesanal! Vale o preço! 😤','Venham provar antes de julgar!','Trabalho com amor, não com pressa 🍞'],
+       happy:  ['Ahh! Agora meus clientes vão entender! 🙌','Perfeito! Isso valoriza meu trabalho!','Que time de consultores fantástico!'],
+       sad:    ['Mas assim eu vou perder minha margem...','Minha avó fazia assim... não sei se muda 😔','Isso não parece certo pra minha padaria'],
+       worried:['Calculem direito! Matemática financeira salva negócios','Com 3 erros meus croissants vão ficar murchos 😅','Pensem: o que o cliente percebe como valor?']
+  },
+  s3:{ emoji:'👔', name:'Cíntia', role:'Dona da Estilo Livre',
+       idle:   ['Minha equipe vive mudando! Preciso de ajuda 😩','O cliente não encontra mais o Marcos... nem a Ana...','Preciso fidelizar minha equipe E meus clientes'],
+       happy:  ['Isso! Gente feliz vende mais! 🌟','Já estou pensando em como implementar!','Adoro quando consultores entendem de gente!'],
+       sad:    ['Isso cria mais rotatividade ainda 😢','Meus funcionários já estão desmotivados...','Não é só sobre dinheiro, é sobre clima!'],
+       worried:['Relacionamento interpessoal é tudo no varejo!','Erros aqui custam funcionários E clientes','Pensem no impacto humano da decisão! 🤔']
+  },
+  s4:{ emoji:'🍔', name:'Seu Carlos', role:'Lanchonete Sabor do Bairro',
+       idle:   ['8 anos de bairro e agora isso...','Nunca usei Instagram na vida! Me ajudem! 😅','Meu burgão é o melhor do bairro, juro!'],
+       happy:  ['Eita! Vou fazer isso hoje mesmo! 🔥','Nem sabia que era tão simples!','Minha filha vai me ajudar com isso!'],
+       sad:    ['Isso parece caro demais pra mim...','Não sei se consigo fazer isso sozinho 😰','Ficou complicado demais...'],
+       worried:['Marketing digital não precisa ser caro!','Com 3 erros meu delivery vai atrasar 😂','Pensa simples: o que o cliente precisa VER?']
+  }
+};
+
+const GENERIC_AVATAR = {
+  emoji:'🎯', name:'Coach', role:'Coach de Marketing',
+  idle:   ['Pensem juntos antes de responder!','O conhecimento do curso está em vocês!','Marketing é sobre pessoas e necessidades 💡'],
+  happy:  ['Excelente raciocínio! 🌟','Isso é Marketing aplicado de verdade!','Seus professores ficaram orgulhosos! 👏'],
+  sad:    ['Não desanimem! O aprendizado vem do erro!','Releiam a explicação com atenção!','Cada erro é uma chance de aprender 📚'],
+  worried:['Cuidado! Já erraram 2 seguidos!','3 erros seguidos e perdem pontos!','Discutam mais antes de clicar! 🤔']
+};
+
+let avatarTimeout = null;
+
+function setAvatar(scenarioId){
+  const av = SCENARIO_AVATARS[scenarioId] || GENERIC_AVATAR;
+  STATE.currentAvatar = av;
+  const body = document.getElementById('avatar-body');
+  const name = document.getElementById('avatar-name');
+  if(body) body.textContent = av.emoji;
+  if(name) name.textContent = av.name+' · '+av.role.split(' ')[0];
+  document.getElementById('avatar-container').style.display='flex';
+  avatarSay(av.idle[Math.floor(Math.random()*av.idle.length)]);
+}
+
+function avatarSay(msg, mood='idle'){
+  const bubble = document.getElementById('avatar-bubble');
+  if(!bubble) return;
+  bubble.textContent = msg;
+  bubble.style.animation='none';
+  void bubble.offsetWidth;
+  bubble.style.animation='bubblePop .3s ease';
+  if(avatarTimeout) clearTimeout(avatarTimeout);
+  avatarTimeout = setTimeout(()=>{
+    const av = STATE.currentAvatar || GENERIC_AVATAR;
+    const lines = av.idle;
+    bubble.textContent = lines[Math.floor(Math.random()*lines.length)];
+  }, 5000);
+}
+
+function avatarReact(correct){
+  const av = STATE.currentAvatar || GENERIC_AVATAR;
+  const body = document.getElementById('avatar-body');
+  if(correct){
+    const msg = av.happy[Math.floor(Math.random()*av.happy.length)];
+    avatarSay(msg, 'happy');
+    body.classList.remove('avatar-bounce','avatar-shake');
+    void body.offsetWidth;
+    body.classList.add('avatar-bounce');
+  } else {
+    const worried = STATE.wrongStreak >= 2;
+    const pool = worried ? av.worried : av.sad;
+    avatarSay(pool[Math.floor(Math.random()*pool.length)], worried?'worried':'sad');
+    body.classList.remove('avatar-bounce','avatar-shake');
+    void body.offsetWidth;
+    body.classList.add('avatar-shake');
+  }
+}
+
+function avatarSpeak(){
+  resumeAC();
+  const av = STATE.currentAvatar || GENERIC_AVATAR;
+  const pool = av.idle;
+  avatarSay(pool[Math.floor(Math.random()*pool.length)]);
+  SFX.tick();
+}
+
+// ════════════════════════════════════════════════════════
+//  LIVES & ANNULMENT SYSTEM
+// ════════════════════════════════════════════════════════
+function renderLivesBar(){
+  const sb = document.getElementById('sb-lives');
+  if(!sb) return;
+  const lost = Math.min(STATE.wrongStreak, 3);
+  const hearts = [0,1,2].map(i=>`<span class="life-heart ${i<lost?'lost':''}">❤️</span>`).join('');
+  sb.innerHTML = `
+    <div id="lives-bar">
+      <span class="lives-label">Vidas</span>
+      ${hearts}
+      <span class="annul-badge ${STATE.livesLost>0?'show':''}" id="annul-count">-${STATE.livesLost} anulação${STATE.livesLost>1?'ões':''}</span>
+    </div>`;
+}
+
+function checkAnnulment(){
+  // 3 consecutive wrong = annul 1 correct answer's points
+  if(STATE.wrongStreak >= 3){
+    STATE.wrongStreak = 0;
+    STATE.livesLost++;
+    // Find highest-scoring correct answer and halve its pts
+    const correctIds = Object.keys(STATE.scores).filter(id=>{
+      const q = findQuestion(id);
+      return q && q.type!=='open' && STATE.answers[id]===q.correct && STATE.scores[id]>2;
+    });
+    if(correctIds.length > 0){
+      const target = correctIds[correctIds.length-1];
+      const penalty = Math.floor(STATE.scores[target]/2);
+      STATE.scores[target] -= penalty;
+      STATE.totalScore = Math.max(0, STATE.totalScore - penalty);
+      SFX.annul();
+      flashScreen('red');
+      avatarSay('💀 3 erros seguidos! Perdi pontos com vocês! Concentrem!', 'worried');
+      showToast(`💀 3 erros seguidos! −${penalty} pontos por anulação!`, 'error');
+    } else {
+      SFX.annul();
+      flashScreen('red');
+      showToast('💀 3 erros seguidos! Cuidado com os próximos!', 'error');
+    }
+    renderLivesBar();
+    updateSidebar();
+  }
+}
+
+function flashScreen(color){
+  const el = document.getElementById('screen-flash');
+  if(!el) return;
+  el.style.background = color==='red'?'rgba(198,40,40,.25)':'rgba(46,125,50,.25)';
+  el.style.opacity='1';
+  el.style.transition='none';
+  setTimeout(()=>{ el.style.transition='opacity .5s ease'; el.style.opacity='0'; },50);
+}
+
+function spawnScorePop(pts, correct, el){
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = correct ? `+${pts}` : `-`;
+  pop.style.color = correct?'var(--ifb-green)':'var(--red)';
+  const rect = el ? el.getBoundingClientRect() : {left:window.innerWidth/2, top:window.innerHeight/2};
+  pop.style.left = (rect.left + rect.width/2 - 20)+'px';
+  pop.style.top  = (rect.top - 10)+'px';
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(), 950);
+}
 function selectGroup(g){
   STATE.group = g;
   document.querySelectorAll('.group-card').forEach(c=>c.classList.remove('selected'));
@@ -709,13 +1051,26 @@ function selectGroup(g){
 function startGame(){
   if(!STATE.group) return;
   document.getElementById('lobby').style.display='none';
-  document.getElementById('app').style.display='block';
+  document.getElementById('instructions').style.display='block';
+}
+
+function goFromInstructions(){
+  resumeAC();
+  document.getElementById('instructions').style.display='none';
+  const appEl = document.getElementById('app');
+  appEl.style.display='block';
   const grp = GROUPS[STATE.group];
   const badge = document.getElementById('header-group-badge');
   badge.textContent = grp.icon+' '+grp.name;
   badge.style.background = grp.color;
   badge.style.color = '#fff';
   initPhase1();
+}
+
+function goBackToLobby(){
+  document.getElementById('instructions').style.display='none';
+  document.getElementById('lobby').style.display='flex';
+  document.getElementById('avatar-container').style.display='none';
 }
 
 // ════════════════════════════════════════════════════════
@@ -725,16 +1080,131 @@ function initPhase1(){
   STATE.phase = 1;
   STATE.scenarioIdx = 0;
   STATE.qIdx = 0;
-  document.getElementById('header-phase').textContent = 'FASE 1';
+  document.getElementById('header-phase').textContent = 'FASE 0';
   updateSidebar();
+  renderPersonaPhase(0); // start with persona before questions
+  startTimer(10); // 10 min for persona
+}
+
+// ════════════════════════════════════════════════════════
+//  FASE 0 — PERSONA
+// ════════════════════════════════════════════════════════
+const PERSONA_FIELDS = [
+  {id:'nome',    label:'Nome fictício da persona',  placeholder:'Ex: Ana Silva, Dona Maria, Sr. Carlos...', type:'text'},
+  {id:'idade',   label:'Idade e ocupação',           placeholder:'Ex: 35 anos, professora e mãe de 2 filhos...', type:'text'},
+  {id:'dor',     label:'Principal dor / problema',  placeholder:'Ex: Não tem tempo para se exercitar, sente culpa...', type:'textarea'},
+  {id:'desejo',  label:'O que ela busca / deseja',  placeholder:'Ex: Quer emagrecer, se sentir mais disposta...', type:'textarea'},
+  {id:'canal',   label:'Como ela descobre negócios', placeholder:'Ex: Instagram, indicação de amigos, passa na rua...', type:'text'},
+  {id:'frase',   label:'Frase que ela diria',        placeholder:'Ex: "Quero algo prático perto de casa"', type:'text'},
+];
+
+function renderPersonaPhase(sIdx){
+  STATE.scenarioIdx = sIdx;
+  const sc = PHASE1_SCENARIOS[sIdx];
+  setAvatar(sc.id); // avatar reage ao cenário desde a persona
+  const pKey = 'persona_'+sc.id;
+  const saved = STATE.answers[pKey] || {};
+  const content = document.getElementById('main-content');
+  const grpColor = GROUPS[STATE.group].color;
+
+  const fieldsHtml = PERSONA_FIELDS.map(f=>{
+    const val = saved[f.id] || '';
+    const input = f.type==='textarea'
+      ? `<textarea class="or-textarea" id="pf-${f.id}" style="min-height:70px;" placeholder="${f.placeholder}">${val}</textarea>`
+      : `<input type="text" class="or-textarea" id="pf-${f.id}" style="min-height:unset;padding:10px 14px;" placeholder="${f.placeholder}" value="${val}">`;
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase;">${f.label}</div>
+      ${input}
+    </div>`;
+  }).join('');
+
+  const personaDone = STATE.answers[pKey] && Object.keys(STATE.answers[pKey]).length > 0;
+
+  content.innerHTML = `
+    <div class="section-head">
+      <div class="section-title" style="color:${grpColor};">FASE 0 — Persona</div>
+      <span class="section-badge">Cenário ${sIdx+1} de ${PHASE1_SCENARIOS.length}</span>
+    </div>
+
+    <div style="background:linear-gradient(135deg,${grpColor},#1A237E);border-radius:12px;padding:22px;margin-bottom:20px;color:#fff;">
+      <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px;">🎯 CENÁRIO DESTA PERSONA</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:36px;">${sc.icon}</div>
+        <div>
+          <div style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;">${sc.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;">${sc.type}</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:rgba(255,255,255,.85);margin-top:12px;line-height:1.6;">${sc.desc}</p>
+    </div>
+
+    <div class="q-card fade-in">
+      <div class="q-num">MAPEAMENTO DE PERSONA · Não vale pontos — vale entendimento! 🧠</div>
+      <div class="q-text">Quem é o cliente ideal desse negócio? Converse com seu grupo e preencha juntos:</div>
+
+      <div style="background:var(--ifb-yellow-faint);border:1px solid var(--ifb-yellow-mid);border-left:4px solid var(--ifb-yellow);padding:11px 14px;border-radius:0 6px 6px 0;font-size:13px;color:var(--mid);margin-bottom:18px;line-height:1.6;">
+        💡 <strong>Dica:</strong> Uma boa persona é específica. Em vez de "mulher de 30 a 50 anos", pense em <em>uma pessoa real</em> que você já conhece que seria cliente desse lugar.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px;">
+        ${fieldsHtml}
+      </div>
+
+      ${personaDone ? `<div style="background:var(--ifb-green-faint);border:1px solid var(--ifb-green-mid);border-left:3px solid var(--ifb-green);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;color:var(--mid);margin-top:8px;">
+        ✅ Persona salva! Vocês podem editar antes de avançar.
+      </div>` : ''}
+    </div>
+
+    <div class="btn-row">
+      ${sIdx > 0 ? `<button class="btn btn-secondary" onclick="renderPersonaPhase(${sIdx-1})">← Cenário anterior</button>` : ''}
+      <button class="btn btn-primary" onclick="savePersona(${sIdx})">
+        ${sIdx < PHASE1_SCENARIOS.length-1 ? '💾 Salvar e próximo cenário →' : '✅ Salvar e iniciar Fase 1 →'}
+      </button>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px;">Você também pode pular e voltar depois — a Fase 1 já vai começar!</div>
+    ${sIdx === 0 ? `<button class="btn btn-secondary" style="margin-top:8px;" onclick="skipAllPersonas()">⏩ Pular personas e ir direto para Fase 1</button>` : ''}
+  `;
+
+  document.getElementById('header-phase').textContent = 'FASE 0';
+  updateSidebar();
+}
+
+function savePersona(sIdx){
+  const sc = PHASE1_SCENARIOS[sIdx];
+  const pKey = 'persona_'+sc.id;
+  const data = {};
+  PERSONA_FIELDS.forEach(f=>{
+    const el = document.getElementById('pf-'+f.id);
+    if(el) data[f.id] = el.value.trim();
+  });
+  STATE.answers[pKey] = data;
+  saveProgressToSupabase();
+  showToast('✅ Persona salva!', 'success');
+
+  if(sIdx < PHASE1_SCENARIOS.length-1){
+    renderPersonaPhase(sIdx+1);
+  } else {
+    startPhase1Questions();
+  }
+}
+
+function skipAllPersonas(){
+  startPhase1Questions();
+}
+
+function startPhase1Questions(){
+  STATE.phase = 1;
+  document.getElementById('header-phase').textContent = 'FASE 1';
+  stopTimer();
+  startTimer(25);
   renderScenario(0, 0);
-  startTimer(25); // 25 min
 }
 
 function renderScenario(sIdx, qIdx){
   STATE.scenarioIdx = sIdx;
   STATE.qIdx = qIdx;
   const sc = PHASE1_SCENARIOS[sIdx];
+  setAvatar(sc.id); // ← avatar do cenário
   const q = sc.questions[qIdx];
   const content = document.getElementById('main-content');
 
@@ -808,6 +1278,7 @@ function renderScenario(sIdx, qIdx){
 }
 
 function selectOption(sIdx, qIdx, optIdx){
+  resumeAC();
   const q = PHASE1_SCENARIOS[sIdx].questions[qIdx];
   if(STATE.answers[q.id] !== undefined) return;
 
@@ -817,7 +1288,27 @@ function selectOption(sIdx, qIdx, optIdx){
   STATE.scores[q.id] = pts;
   STATE.totalScore += pts;
 
-  showToast(correct?`✅ Correto! +${pts} pontos`:`❌ Não foi dessa vez. +${pts} ponto`, correct?'success':'error');
+  // Lives tracking
+  if(correct){
+    STATE.wrongStreak = 0;
+    STATE.totalWrong = STATE.totalWrong; // keep
+    SFX.correct();
+    flashScreen('green');
+  } else {
+    STATE.wrongStreak++;
+    STATE.totalWrong++;
+    SFX.wrong();
+    checkAnnulment();
+  }
+
+  // Avatar reaction
+  avatarReact(correct);
+
+  // Score pop at click target
+  const optEl = document.querySelector(`[data-idx="${optIdx}"]`);
+  spawnScorePop(pts, correct, optEl);
+
+  showToast(correct?`✅ Correto! +${pts} pontos`:`❌ Não foi dessa vez. ${STATE.wrongStreak>0?`(${STATE.wrongStreak}/3 erros consecutivos)`:''}`, correct?'success':'error');
   saveProgressToSupabase();
   renderScenario(sIdx, qIdx);
 }
@@ -841,6 +1332,8 @@ function navQuestion(dir){
 function finishPhase1(){
   STATE.phase1Done = true;
   stopTimer();
+  SFX.phaseComplete();
+  avatarSay('🎉 Fase 1 concluída! Vocês foram incríveis! Agora a consultoria real!', 'happy');
   showPhaseTransition();
 }
 
@@ -1010,6 +1503,8 @@ function submitOpenAnswer(qId, pts, qIdx){
   STATE.answers[qId] = val;
   STATE.scores[qId] = pts;
   STATE.totalScore += pts;
+  SFX.openSave();
+  spawnScorePop(pts, true, document.getElementById('or-'+qId));
   showToast(`✅ Resposta salva! +${pts} pontos`, 'success');
   saveProgressToSupabase();
   renderPhase2Questions(qIdx);
@@ -1018,6 +1513,9 @@ function submitOpenAnswer(qId, pts, qIdx){
 function finishPhase2(){
   STATE.phase2Done = true;
   stopTimer();
+  SFX.phaseComplete();
+  setTimeout(()=>SFX.phaseComplete(), 600);
+  avatarSay('🏆 Parabéns! Consultoria finalizada! Vão apresentar para a turma!', 'happy');
   showFinalResult();
 }
 
@@ -1078,6 +1576,7 @@ function showFinalResult(){
 function updateSidebar(){
   document.getElementById('sb-score').textContent = STATE.totalScore;
   if(STATE.group) document.getElementById('sb-score').style.color = GROUPS[STATE.group].color;
+  renderLivesBar();
 
   const totalQ = PHASE1_SCENARIOS.reduce((a,s)=>a+s.questions.length,0) + PHASE2_MISSION.questions.length;
   const doneQ = Object.keys(STATE.answers).length;
@@ -1125,16 +1624,33 @@ function updateSidebar(){
 // ════════════════════════════════════════════════════════
 function startTimer(minutes){
   STATE.timerSec = minutes*60;
+  STATE.timerTotal = minutes*60;
   stopTimer();
   STATE.timerInterval = setInterval(()=>{
     STATE.timerSec--;
     const el = document.getElementById('timer-display');
+    const bar = document.getElementById('timer-bar');
     if(!el) return;
     const m = Math.floor(STATE.timerSec/60);
     const s = STATE.timerSec%60;
     el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    el.className = 'timer-display'+(STATE.timerSec<=120?' urgent':'');
-    if(STATE.timerSec<=0){ stopTimer(); el.textContent='⏰ Fim!'; }
+    const pct = Math.max(0, STATE.timerSec/STATE.timerTotal*100);
+    if(bar){
+      bar.style.width = pct+'%';
+      bar.style.background = pct>40?'var(--ifb-yellow)':pct>15?'#FF9800':'#FF5252';
+    }
+    if(STATE.timerSec <= 120){
+      el.className = 'timer-display urgent';
+    } else {
+      el.className = 'timer-display';
+    }
+    if(STATE.timerSec === 120) { showToast('⏰ Atenção! Faltam 2 minutos!', 'info'); SFX.timerUrgent(); }
+    if(STATE.timerSec <= 10 && STATE.timerSec > 0) SFX.tick();
+    if(STATE.timerSec <= 0){
+      stopTimer();
+      el.textContent='⏰ Fim!';
+      showToast('⏰ Tempo esgotado!', 'error');
+    }
   },1000);
 }
 function stopTimer(){ if(STATE.timerInterval){ clearInterval(STATE.timerInterval); STATE.timerInterval=null; } }
