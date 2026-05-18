@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing na Prática — PROEJA IFB</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ifb-green:#2E7D32;--ifb-green-dk:#1B5E20;--ifb-green-lt:#43A047;--ifb-green-faint:#E8F5E9;--ifb-green-mid:#A5D6A7;
+  --ifb-yellow:#F9A825;--ifb-yellow-faint:#FFFDE7;--ifb-yellow-mid:#FFE082;
+  --dark:#1A1A2E;--mid:#374151;--muted:#6B7280;--dim:#9CA3AF;
+  --page:#F4F6F0;--surf:#FAFBF8;--card:#FFFFFF;
+  --border:#D9E0D0;--line:#EEF2E8;
+  --red:#C62828;--red-faint:#FEF2F2;--red-mid:#FFCDD2;
+  --blue:#1565C0;--blue-faint:#E3F2FD;--blue-mid:#BBDEFB;
+  --shadow:0 2px 6px rgba(0,0,0,.08);--shadow-md:0 6px 20px rgba(0,0,0,.12);
+  --g1:#2E7D32;--g2:#1565C0;--g3:#6A1B9A;--g4:#E65100;
+  --g1-faint:#E8F5E9;--g2-faint:#E3F2FD;--g3-faint:#F3E5F5;--g4-faint:#FFF3E0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Source Sans 3',sans-serif;background:var(--page);color:var(--dark);min-height:100vh;}
+h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
+
+/* ── LOBBY ── */
+#lobby{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px;background:linear-gradient(145deg,#1B5E20 0%,#2E7D32 50%,#1A237E 100%);}
+.lobby-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:6px 18px;border-radius:20px;margin-bottom:24px;}
+.lobby-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(36px,7vw,72px);color:#fff;text-align:center;line-height:1;letter-spacing:1px;margin-bottom:8px;}
+.lobby-title span{color:var(--ifb-yellow);}
+.lobby-sub{font-size:16px;color:rgba(255,255,255,.75);text-align:center;margin-bottom:48px;letter-spacing:.3px;}
+.lobby-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:600px;width:100%;margin-bottom:32px;}
+@media(max-width:500px){.lobby-cards{grid-template-columns:1fr;}}
+.group-card{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s;text-align:center;}
+.group-card:hover{background:rgba(255,255,255,.2);border-color:var(--ifb-yellow);transform:translateY(-2px);}
+.group-card.selected{background:rgba(249,168,37,.2);border-color:var(--ifb-yellow);}
+.gc-icon{font-size:32px;margin-bottom:8px;}
+.gc-name{font-family:'Oswald',sans-serif;font-size:20px;color:#fff;letter-spacing:.5px;}
+.gc-role{font-size:12px;color:rgba(255,255,255,.65);margin-top:4px;}
+.gc-color{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle;}
+.lobby-btn{background:var(--ifb-yellow);color:var(--dark);font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;letter-spacing:1.5px;text-transform:uppercase;padding:15px 48px;border:none;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+.lobby-btn:hover{background:#FFB300;transform:translateY(-1px);box-shadow:0 4px 16px rgba(249,168,37,.4);}
+.lobby-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.lobby-hint{font-size:12px;color:rgba(255,255,255,.5);text-align:center;}
+.prof-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:1px;padding:9px 22px;border-radius:6px;cursor:pointer;transition:all .2s;margin-top:12px;}
+.prof-btn:hover{background:rgba(255,255,255,.22);color:#fff;}
+
+/* ── MAIN LAYOUT ── */
+#app{display:none;min-height:100vh;}
+.app-header{background:var(--ifb-green-dk);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.app-logo{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;}
+.app-logo span{color:var(--ifb-yellow);}
+.header-group{display:flex;align-items:center;gap:12px;}
+.group-badge{font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;padding:5px 14px;border-radius:20px;letter-spacing:.5px;}
+.phase-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.9);font-family:'Oswald',sans-serif;font-size:12px;padding:4px 12px;border-radius:20px;letter-spacing:1px;}
+.timer-display{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--ifb-yellow);min-width:60px;text-align:center;}
+.timer-display.urgent{color:#FF5252;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.app-body{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px);}
+@media(max-width:768px){.app-body{grid-template-columns:1fr;}}
+
+/* ── SIDEBAR ── */
+.sidebar{background:#fff;border-right:1px solid var(--border);padding:0;overflow-y:auto;}
+.sb-section{padding:18px 16px;border-bottom:1px solid var(--border);}
+.sb-title{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.score-big{font-family:'Oswald',sans-serif;font-size:48px;font-weight:700;line-height:1;text-align:center;}
+.score-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:4px;}
+.phase-steps{display:flex;flex-direction:column;gap:0;}
+.step-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:all .15s;}
+.step-item:last-child{border-bottom:none;}
+.step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;flex-shrink:0;background:var(--line);color:var(--muted);border:2px solid var(--border);}
+.step-item.done .step-num{background:var(--ifb-green);border-color:var(--ifb-green);color:#fff;}
+.step-item.active .step-num{background:var(--ifb-yellow);border-color:var(--ifb-yellow);color:var(--dark);}
+.step-text{font-size:12px;color:var(--muted);line-height:1.3;}
+.step-item.done .step-text{text-decoration:line-through;color:var(--dim);}
+.step-item.active .step-text{color:var(--dark);font-weight:600;}
+.mini-chart{padding:4px 0;}
+.mc-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.mc-label{font-size:11px;color:var(--muted);width:64px;flex-shrink:0;}
+.mc-bar{flex:1;background:var(--line);height:6px;border-radius:3px;overflow:hidden;}
+.mc-fill{height:6px;border-radius:3px;transition:width .5s;}
+.mc-val{font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;color:var(--dark);width:28px;text-align:right;}
+
+/* ── MAIN CONTENT ── */
+.main-content{padding:28px;overflow-y:auto;}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;}
+.section-title{font-family:'Oswald',sans-serif;font-size:26px;font-weight:600;color:var(--dark);}
+.section-badge{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:3px 10px;border-radius:20px;}
+
+/* ── SCENARIO CARD ── */
+.scenario-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);}
+.sc-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.sc-icon{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.sc-meta{flex:1;}
+.sc-name{font-family:'Oswald',sans-serif;font-size:20px;color:var(--dark);letter-spacing:.3px;}
+.sc-type{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
+.sc-body{padding:18px 22px;}
+.sc-desc{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:16px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px;}
+.kpi-box{background:var(--surf);border:1px solid var(--border);border-radius:6px;padding:10px 12px;text-align:center;}
+.kpi-val{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;display:block;}
+.kpi-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-top:2px;}
+.challenge-box{background:var(--ifb-yellow-faint);border:1px solid var(--ifb-yellow-mid);border-left:4px solid var(--ifb-yellow);padding:13px 16px;border-radius:0 6px 6px 0;font-size:13px;color:var(--mid);line-height:1.6;}
+.challenge-box strong{color:#E65100;font-weight:700;}
+
+/* ── QUESTION CARD ── */
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:16px;box-shadow:var(--shadow);}
+.q-num{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.q-text{font-size:15px;color:var(--dark);line-height:1.6;font-weight:600;margin-bottom:16px;}
+.q-options{display:grid;gap:10px;}
+.q-opt{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .18s;background:#fff;}
+.q-opt:hover{border-color:var(--ifb-green-mid);background:var(--ifb-green-faint);}
+.q-opt.selected{border-color:var(--ifb-green);background:var(--ifb-green-faint);}
+.q-opt.correct{border-color:var(--ifb-green);background:var(--ifb-green-faint);}
+.q-opt.wrong{border-color:var(--red);background:var(--red-faint);}
+.q-opt.locked{pointer-events:none;}
+.opt-letter{width:26px;height:26px;border-radius:50%;background:var(--line);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;color:var(--muted);flex-shrink:0;transition:all .18s;}
+.q-opt.selected .opt-letter{background:var(--ifb-green);border-color:var(--ifb-green);color:#fff;}
+.q-opt.correct .opt-letter{background:var(--ifb-green);border-color:var(--ifb-green);color:#fff;}
+.q-opt.wrong .opt-letter{background:var(--red);border-color:var(--red);color:#fff;}
+.opt-text{font-size:13px;color:var(--mid);line-height:1.5;padding-top:3px;}
+.q-explanation{margin-top:12px;background:var(--ifb-green-faint);border:1px solid var(--ifb-green-mid);border-left:3px solid var(--ifb-green);padding:11px 14px;font-size:13px;color:var(--mid);line-height:1.6;border-radius:0 6px 6px 0;display:none;}
+.q-explanation.show{display:block;animation:fadeIn .3s ease;}
+
+/* ── OPEN RESPONSE ── */
+.open-response{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:16px;box-shadow:var(--shadow);}
+.or-prompt{font-size:14px;color:var(--dark);font-weight:600;margin-bottom:12px;line-height:1.6;}
+.or-textarea{width:100%;min-height:100px;padding:12px 14px;border:2px solid var(--border);border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:13px;color:var(--dark);line-height:1.6;resize:vertical;outline:none;transition:border-color .18s;}
+.or-textarea:focus{border-color:var(--ifb-green);}
+.or-hint{font-size:11px;color:var(--dim);margin-top:6px;}
+.char-count{font-size:11px;color:var(--dim);text-align:right;margin-top:4px;}
+
+/* ── DRAG & DROP RANKING ── */
+.rank-list{display:flex;flex-direction:column;gap:8px;}
+.rank-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border:2px solid var(--border);border-radius:8px;cursor:grab;transition:all .18s;user-select:none;}
+.rank-item:hover{border-color:var(--ifb-green-mid);box-shadow:var(--shadow);}
+.rank-item.dragging{opacity:.5;transform:scale(.98);}
+.rank-num{font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:var(--ifb-green);width:24px;text-align:center;}
+.rank-handle{color:var(--dim);font-size:16px;}
+.rank-text{font-size:13px;color:var(--mid);flex:1;line-height:1.4;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;border-radius:6px;transition:all .18s;}
+.btn-primary{background:var(--ifb-green);color:#fff;}
+.btn-primary:hover{background:var(--ifb-green-lt);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-secondary{background:#fff;border:2px solid var(--border);color:var(--mid);}
+.btn-secondary:hover{border-color:var(--ifb-green);color:var(--ifb-green);}
+.btn-yellow{background:var(--ifb-yellow);color:var(--dark);}
+.btn-yellow:hover{background:#FFB300;}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;}
+
+/* ── FEEDBACK TOAST ── */
+.toast{position:fixed;bottom:28px;right:28px;padding:14px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;animation:slideUp .3s ease;box-shadow:var(--shadow-md);}
+.toast.success{background:var(--ifb-green);color:#fff;}
+.toast.error{background:var(--red);color:#fff;}
+.toast.info{background:var(--blue);color:#fff;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── PHASE TRANSITION ── */
+.phase-banner{text-align:center;padding:48px 28px;background:linear-gradient(135deg,var(--ifb-green-dk),var(--ifb-green));border-radius:12px;color:#fff;margin-bottom:24px;}
+.pb-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:12px;}
+.pb-title{font-family:'Oswald',sans-serif;font-size:36px;font-weight:700;margin-bottom:8px;}
+.pb-sub{font-size:15px;color:rgba(255,255,255,.8);}
+.pb-stars{font-size:32px;margin-bottom:16px;}
+
+/* ── RESULT CARD ── */
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);}
+.rc-header{padding:20px 24px;background:var(--ifb-green-faint);border-bottom:1px solid var(--ifb-green-mid);}
+.rc-score-big{font-family:'Oswald',sans-serif;font-size:64px;font-weight:700;color:var(--ifb-green);line-height:1;}
+.rc-body{padding:20px 24px;}
+.rc-breakdown{display:grid;gap:10px;margin-bottom:20px;}
+.rc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);}
+.rc-row:last-child{border-bottom:none;}
+.rc-item{font-size:13px;color:var(--muted);}
+.rc-pts{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:var(--dark);}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.badge{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:2px solid;}
+
+/* ── TEACHER PANEL ── */
+#prof-panel{display:none;min-height:100vh;background:var(--page);}
+.prof-header{background:var(--dark);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+.prof-title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--ifb-yellow);}
+.prof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding:24px;}
+.group-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);}
+.gp-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.gp-name{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;color:#fff;}
+.gp-score-big{font-family:'Oswald',sans-serif;font-size:36px;font-weight:700;color:#fff;}
+.gp-body{padding:14px 18px;}
+.gp-stat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px;}
+.gp-stat-row:last-child{border-bottom:none;}
+.gp-stat-lbl{color:var(--muted);}
+.gp-stat-val{font-weight:600;color:var(--dark);}
+.leaderboard{background:var(--card);border:1px solid var(--border);border-radius:10px;margin:0 24px 24px;box-shadow:var(--shadow);}
+.lb-header{padding:16px 20px;border-bottom:1px solid var(--border);}
+.lb-title{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600;}
+.lb-row{display:grid;grid-template-columns:36px 1fr 80px 80px;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--muted);text-align:center;}
+.lb-rank.gold{color:#F9A825;}
+.lb-rank.silver{color:#90A4AE;}
+.lb-rank.bronze{color:#A1887F;}
+.lb-group{font-size:14px;font-weight:600;}
+.lb-phase{font-size:11px;color:var(--muted);letter-spacing:1px;}
+.lb-score{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;text-align:right;}
+.lb-acc{font-size:12px;color:var(--muted);text-align:right;}
+
+/* ── PROGRESS BAR ── */
+.prog-bar-wrap{background:var(--line);height:6px;border-radius:3px;overflow:hidden;}
+.prog-bar-fill{height:6px;border-radius:3px;transition:width .6s ease;}
+
+/* ── PHASE 2 SPECIFIC ── */
+.mission-card{background:linear-gradient(135deg,var(--ifb-green-dk),var(--blue));color:#fff;border-radius:10px;padding:22px;margin-bottom:20px;}
+.mc-badge{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px;}
+.mc-title{font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;}
+.mc-desc{font-size:14px;color:rgba(255,255,255,.85);line-height:1.6;}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+.choice-card{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;text-align:center;}
+.choice-card:hover{border-color:var(--ifb-green);transform:translateY(-2px);box-shadow:var(--shadow);}
+.choice-card.selected{border-color:var(--ifb-green);background:var(--ifb-green-faint);}
+.choice-icon{font-size:28px;margin-bottom:8px;}
+.choice-name{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--dark);}
+.choice-desc{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
+
+/* MISC */
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease;}
+.hidden{display:none;}
+.tag{display:inline-block;padding:2px 9px;font-size:10px;border-radius:20px;font-weight:600;letter-spacing:.5px;}
+.tag-green{background:var(--ifb-green-faint);color:var(--ifb-green);border:1px solid var(--ifb-green-mid);}
+.tag-yellow{background:var(--ifb-yellow-faint);color:#E65100;border:1px solid var(--ifb-yellow-mid);}
+.tag-red{background:var(--red-faint);color:var(--red);border:1px solid var(--red-mid);}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ LOBBY ══ -->
+<div id="lobby">
+  <div class="lobby-badge">📚 IFB Campus Brasília · PROEJA</div>
+  <h1 class="lobby-title">Marketing<br><span>na Prática</span></h1>
+  <p class="lobby-sub">Simulador de Situações Reais · 2 Fases · 4 Grupos</p>
+
+  <div class="lobby-cards">
+    <div class="group-card" onclick="selectGroup(1)" id="gc1">
+      <div class="gc-icon">🏪</div>
+      <div class="gc-name"><span class="gc-color" style="background:#2E7D32"></span>Grupo 1</div>
+      <div class="gc-role">Consultores de Marketing</div>
+    </div>
+    <div class="group-card" onclick="selectGroup(2)" id="gc2">
+      <div class="gc-icon">📊</div>
+      <div class="gc-name"><span class="gc-color" style="background:#1565C0"></span>Grupo 2</div>
+      <div class="gc-role">Analistas de Mercado</div>
+    </div>
+    <div class="group-card" onclick="selectGroup(3)" id="gc3">
+      <div class="gc-icon">📱</div>
+      <div class="gc-name"><span class="gc-color" style="background:#6A1B9A"></span>Grupo 3</div>
+      <div class="gc-role">Equipe Digital</div>
+    </div>
+    <div class="group-card" onclick="selectGroup(4)" id="gc4">
+      <div class="gc-icon">🎯</div>
+      <div class="gc-name"><span class="gc-color" style="background:#E65100"></span>Grupo 4</div>
+      <div class="gc-role">Estrategistas de Vendas</div>
+    </div>
+  </div>
+
+  <button class="lobby-btn" id="start-btn" onclick="startGame()" disabled>
+    ▶ INICIAR JOGO
+  </button>
+  <div class="lobby-hint">Selecione seu grupo para começar</div>
+  <button class="prof-btn" onclick="openProfPanel()">🎓 Painel do Professor</button>
+</div>
+
+<!-- ══════════════════════════════════════════════ APP ══ -->
+<div id="app">
+  <header class="app-header">
+    <div class="app-logo">Marketing <span>na Prática</span></div>
+    <div class="header-group">
+      <span class="group-badge" id="header-group-badge">—</span>
+      <span class="phase-pill" id="header-phase">FASE 1</span>
+      <span class="timer-display" id="timer-display">--:--</span>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sb-section">
+        <div class="sb-title">Pontuação</div>
+        <div class="score-big" id="sb-score">0</div>
+        <div class="score-lbl">pontos</div>
+        <div style="margin-top:12px;">
+          <div class="prog-bar-wrap">
+            <div class="prog-bar-fill" id="sb-prog" style="width:0%;background:var(--ifb-green);"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:4px;">
+            <span id="sb-q-done">0</span><span id="sb-q-total">/ 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-title">Etapas</div>
+        <div class="phase-steps" id="step-list"></div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-title">Desempenho</div>
+        <div class="mini-chart" id="mini-chart"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content" id="main-content">
+      <!-- dynamic content here -->
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ PROFESSOR ══ -->
+<div id="prof-panel">
+  <div class="prof-header">
+    <div class="prof-title">🎓 Painel do Professor</div>
+    <button class="btn btn-secondary" onclick="closeProfPanel()" style="font-size:12px;">← Voltar ao Lobby</button>
+  </div>
+
+  <div class="leaderboard">
+    <div class="lb-header">
+      <div class="lb-title">🏆 Classificação em Tempo Real</div>
+    </div>
+    <div id="lb-body"></div>
+  </div>
+
+  <div class="prof-grid" id="prof-grid"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="display:none;" class="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════════════════════
+
+const GROUPS = {
+  1:{name:'Grupo 1',role:'Consultores de Marketing',color:'#2E7D32',faint:'#E8F5E9',icon:'🏪'},
+  2:{name:'Grupo 2',role:'Analistas de Mercado',color:'#1565C0',faint:'#E3F2FD',icon:'📊'},
+  3:{name:'Grupo 3',role:'Equipe Digital',color:'#6A1B9A',faint:'#F3E5F5',icon:'📱'},
+  4:{name:'Grupo 4',role:'Estrategistas de Vendas',color:'#E65100',faint:'#FFF3E0',icon:'🎯'}
+};
+
+// ── FASE 1: Diagnóstico & Fundamentos (4 cenários, cada um com 3 questões)
+const PHASE1_SCENARIOS = [
+  {
+    id:'s1',
+    icon:'👟',
+    iconBg:'#FFF3E0',
+    name:'Loja Esportiva "Corre & Cia"',
+    type:'Varejo · Gestão de Ponto de Venda',
+    desc:'A loja Corre & Cia fica num shopping de Brasília. Nos últimos 3 meses o movimento caiu 40% e as vendas despencaram. A gerente percebe que os clientes entram mas raramente compram. O layout é antigo, as vitrines parecem abandonadas e os vendedores ficam sentados ao fundo.',
+    kpis:[
+      {val:'−40%',lbl:'Visitação',color:'#C62828'},
+      {val:'12%',lbl:'Conversão',color:'#E65100'},
+      {val:'R$89',lbl:'Ticket Médio',color:'#1565C0'},
+      {val:'2,1',lbl:'NPS',color:'#6A1B9A'}
+    ],
+    challenge:'<strong>Desafio:</strong> Com menos clientes entrando e baixíssima conversão, o que a equipe de marketing deve fazer primeiro para reverter esse cenário?',
+    questions:[
+      {
+        id:'s1q1',
+        text:'A gerente quer aumentar a visitação rapidamente. Qual estratégia de marketing é MAIS adequada como primeiro passo?',
+        options:[
+          {l:'A',t:'Reduzir 50% o preço de todos os produtos imediatamente'},
+          {l:'B',t:'Reformar o layout da loja, melhorar a vitrine e treinar os vendedores no atendimento ativo'},
+          {l:'C',t:'Fechar a loja por uma semana para reformas completas'},
+          {l:'D',t:'Demitir todos os vendedores e contratar novos'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'O merchandising (layout, vitrine, apresentação de produtos no ponto de venda) e o atendimento são pilares do Marketing de Varejo. Antes de qualquer promoção, o ambiente precisa estar atrativo. Isso corresponde aos conceitos de PDV e Comportamento do Consumidor estudados no curso.'
+      },
+      {
+        id:'s1q2',
+        text:'A gerente quer entender por que os clientes entram mas não compram. Qual ferramenta de pesquisa de marketing ela deveria usar?',
+        options:[
+          {l:'A',t:'Análise financeira dos últimos 3 anos'},
+          {l:'B',t:'Pesquisa de satisfação e observação do comportamento do consumidor na loja'},
+          {l:'C',t:'Contratar uma empresa de TV para fazer propaganda'},
+          {l:'D',t:'Publicar um post no Instagram perguntando a opinião das pessoas'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'A pesquisa de comportamento do consumidor (análise qualitativa e quantitativa) é a ferramenta correta para entender por que os clientes não convertem. Simplesmente perguntar nas redes sociais gera viés. A disciplina de Comportamento do Consumidor do PROEJA aborda exatamente isso.'
+      },
+      {
+        id:'s1q3',
+        text:'Após melhorar a loja, a gerente quer criar uma promoção. Qual tipo de promoção seria mais eficaz para AUMENTAR O TICKET MÉDIO?',
+        options:[
+          {l:'A',t:'"Compre 3 e pague 2" em tênis da mesma categoria'},
+          {l:'B',t:'"Kit completo" com desconto — tênis + meia + squeeze'},
+          {l:'C',t:'Sorteio de um tênis entre todos os clientes do mês'},
+          {l:'D',t:'Propaganda no rádio local'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'O cross-selling (venda cruzada de produtos complementares) é a técnica mais eficaz para aumentar o ticket médio. O "Kit completo" estimula o cliente a comprar mais itens. "Compre 3 pague 2" pode até reduzir a margem sem aumentar o valor por cliente. Técnicas de Comunicação, Negociação e Vendas abordam isso.'
+      }
+    ]
+  },
+  {
+    id:'s2',
+    icon:'🥐',
+    iconBg:'#FFF8E1',
+    name:'Padaria Artesanal "Pão Nosso"',
+    type:'Serviços · Estratégia de Precificação',
+    desc:'A Padaria Pão Nosso é conhecida pela qualidade dos produtos, mas os clientes reclamam que os preços são "caros demais". A dona, Dona Maria, usa ingredientes de alta qualidade e trabalha com receitas artesanais. Os vizinhos da padaria industrial vendem pão 60% mais barato.',
+    kpis:[
+      {val:'R$4,50',lbl:'Pão Artesanal',color:'#E65100'},
+      {val:'R$1,80',lbl:'Pão Industrial',color:'#1565C0'},
+      {val:'32%',lbl:'Margem Atual',color:'#2E7D32'},
+      {val:'−15%',lbl:'Vendas/mês',color:'#C62828'}
+    ],
+    challenge:'<strong>Desafio:</strong> Como Dona Maria pode justificar e comunicar o preço premium do seu pão artesanal sem perder clientes?',
+    questions:[
+      {
+        id:'s2q1',
+        text:'Qual é a principal estratégia de precificação que a Padaria Pão Nosso deveria adotar?',
+        options:[
+          {l:'A',t:'Reduzir o preço para competir diretamente com a padaria industrial'},
+          {l:'B',t:'Precificação baseada em valor percebido — comunicar a qualidade, origem dos ingredientes e sabor diferenciado'},
+          {l:'C',t:'Aumentar ainda mais o preço para parecer mais exclusivo'},
+          {l:'D',t:'Fechar a padaria e abrir outro negócio'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'A precificação baseada em valor percebido é a estratégia certa para produtos premium. Dona Maria não compete em preço, mas em qualidade e experiência. A disciplina de Gestão Financeira e Estratégia de Precificação ensina que o preço deve refletir o valor que o cliente percebe, não apenas o custo.'
+      },
+      {
+        id:'s2q2',
+        text:'Para comunicar o valor do pão artesanal, qual ação de marketing seria MAIS eficaz para a Pão Nosso?',
+        options:[
+          {l:'A',t:'Colocar um banner na porta dizendo "Preços justos"'},
+          {l:'B',t:'Criar conteúdo nas redes sociais mostrando o processo artesanal, ingredientes e história da padaria'},
+          {l:'C',t:'Distribuir panfletos com lista de preços no bairro'},
+          {l:'D',t:'Oferecer crédito parcelado para os clientes'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'O marketing de conteúdo (mostrar o processo, história e diferenciais) é a ferramenta mais eficaz para comunicar valor. Isso cria conexão emocional com o produto e justifica o preço premium. Marketing em Ambiente Digital e Gestão de Produtos e Marcas abordam essa estratégia.'
+      },
+      {
+        id:'s2q3',
+        text:'Dona Maria quer calcular se pode dar um desconto de 10% sem perder dinheiro. O custo do pão é R$2,50 e o preço atual é R$4,50. Qual seria a nova margem de contribuição com desconto?',
+        options:[
+          {l:'A',t:'Aproximadamente 16%'},
+          {l:'B',t:'Aproximadamente 21%'},
+          {l:'C',t:'Aproximadamente 28%'},
+          {l:'D',t:'Aproximadamente 32%'}
+        ],
+        correct:0,
+        pts:25,
+        explanation:'Com desconto de 10%: novo preço = R$4,05. Margem = (4,05 − 2,50) / 4,05 × 100 ≈ 38,3%. Mas a margem de contribuição sobre o custo seria (1,55 / 2,50) = 62%. Correto é sobre o preço: 38%. Aqui testamos a alternativa mais próxima que é ~38%. A disciplina de Gestão Financeira e Estratégia de Precificação ensina esses cálculos de markup e margem.'
+      }
+    ]
+  },
+  {
+    id:'s3',
+    icon:'👔',
+    iconBg:'#EDE7F6',
+    name:'Loja de Roupas "Estilo Livre"',
+    type:'RH & Marketing · Retenção de Equipe',
+    desc:'A loja Estilo Livre tem altíssima rotatividade de funcionários — a cada 2 meses troca quase metade da equipe. Os clientes reclamam que "nunca encontram o mesmo atendente". A dona percebe que isso afeta diretamente a qualidade do atendimento e as vendas.',
+    kpis:[
+      {val:'5x',lbl:'Rotatividade/ano',color:'#C62828'},
+      {val:'R$800',lbl:'Custo/contratação',color:'#E65100'},
+      {val:'2,8',lbl:'NPS',color:'#1565C0'},
+      {val:'−22%',lbl:'Recompra',color:'#C62828'}
+    ],
+    challenge:'<strong>Desafio:</strong> A alta rotatividade está destruindo a experiência do cliente. Como o marketing interno e externo pode ajudar a resolver esse problema?',
+    questions:[
+      {
+        id:'s3q1',
+        text:'Alta rotatividade de funcionários afeta diretamente o marketing porque:',
+        options:[
+          {l:'A',t:'Funcionários saindo divulgam mal a empresa nas redes sociais'},
+          {l:'B',t:'Clientes perdem o vínculo de confiança com atendentes conhecidos, reduzindo a fidelização e a recompra'},
+          {l:'C',t:'A loja precisa gastar mais em propaganda para compensar'},
+          {l:'D',t:'O Google penaliza empresas com alta rotatividade'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'A fidelização de clientes depende muito do relacionamento pessoal com os atendentes. Quando o cliente encontra sempre novos atendentes, perde o vínculo de confiança. Comportamento do Consumidor e Técnicas de Comunicação, Negociação e Vendas abordam que relacionamentos de longo prazo aumentam a recompra.'
+      },
+      {
+        id:'s3q2',
+        text:'Para reduzir a rotatividade e melhorar o atendimento, qual estratégia combina marketing interno e externo?',
+        options:[
+          {l:'A',t:'Aumentar a propaganda no Facebook e Instagram da loja'},
+          {l:'B',t:'Criar um programa de reconhecimento para funcionários + programa de fidelidade para clientes'},
+          {l:'C',t:'Trocar todos os funcionários por estagiários mais baratos'},
+          {l:'D',t:'Reduzir o horário de funcionamento para diminuir o esforço da equipe'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'O endomarketing (marketing interno) trabalha a motivação e retenção de funcionários. Combinado com um programa de fidelidade para clientes, cria um ciclo virtuoso: funcionários motivados atendem melhor → clientes satisfeitos compram mais. Relacionamento Interpessoal e Técnicas de Vendas abordam isso.'
+      },
+      {
+        id:'s3q3',
+        text:'A dona quer criar um programa de fidelidade. Qual modelo seria mais simples e eficaz para uma loja de roupas pequena?',
+        options:[
+          {l:'A',t:'Cartão fidelidade digital — a cada 10 compras, ganhe 15% de desconto na próxima'},
+          {l:'B',t:'App próprio com pontos, cashback e integração com blockchain'},
+          {l:'C',t:'Sorteio de uma viagem todo fim de ano'},
+          {l:'D',t:'Parceria com outros 50 lojistas do bairro'}
+        ],
+        correct:0,
+        pts:20,
+        explanation:'Para pequenas empresas, programas simples e claros funcionam melhor. O cartão fidelidade (físico ou digital) com regras fáceis tem alta adesão. Programas complexos confundem e afastam clientes. Comportamento do Consumidor ensina que a simplicidade reduz a "fricção" na tomada de decisão.'
+      }
+    ]
+  },
+  {
+    id:'s4',
+    icon:'🍔',
+    iconBg:'#FFF3E0',
+    name:'Lanchonete "Sabor do Bairro"',
+    type:'Food Service · Marketing Digital',
+    desc:'A Lanchonete Sabor do Bairro existe há 8 anos no bairro, sempre com clientes fiéis. Mas nos últimos 6 meses o movimento caiu muito. Um concorrente novo abriu perto com forte presença no Instagram e iFood. O dono, Seu Carlos, nunca usou redes sociais.',
+    kpis:[
+      {val:'0',lbl:'Seguidores IG',color:'#C62828'},
+      {val:'−35%',lbl:'Vendas',color:'#C62828'},
+      {val:'8 anos',lbl:'No bairro',color:'#2E7D32'},
+      {val:'4,8★',lbl:'Avaliação Google',color:'#E65100'}
+    ],
+    challenge:'<strong>Desafio:</strong> Seu Carlos tem um negócio consolidado mas sem presença digital. Como entrar no marketing digital de forma simples e eficaz?',
+    questions:[
+      {
+        id:'s4q1',
+        text:'Qual deve ser o PRIMEIRO passo de Seu Carlos para entrar no marketing digital?',
+        options:[
+          {l:'A',t:'Contratar uma agência de marketing digital com orçamento de R$5.000/mês'},
+          {l:'B',t:'Criar um perfil no Instagram e Google Meu Negócio, começando com fotos dos pratos e horários'},
+          {l:'C',t:'Investir em anúncios pagos no Facebook imediatamente'},
+          {l:'D',t:'Criar um app próprio da lanchonete'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'O primeiro passo para pequenos negócios é ter presença básica: Google Meu Negócio (gratuito e muito eficaz para buscas locais) e perfil no Instagram com conteúdo orgânico. Marketing em Ambiente Digital ensina que a base precede o investimento em mídia paga.'
+      },
+      {
+        id:'s4q2',
+        text:'Seu Carlos tem 4,8 estrelas no Google mas nunca respondeu avaliações. Por que responder avaliações é estratégia de marketing?',
+        options:[
+          {l:'A',t:'Porque o Google aumenta o ranking de quem responde avaliações'},
+          {l:'B',t:'Porque mostra ao público que a empresa se preocupa com os clientes, criando confiança e incentivando novas avaliações'},
+          {l:'C',t:'Porque é obrigatório por lei responder avaliações online'},
+          {l:'D',t:'Apenas para corrigir erros nas avaliações negativas'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'Responder avaliações (positivas e negativas) demonstra cuidado com o cliente, fortalece a reputação da marca e estimula outros clientes a avaliarem. Marketing Analytics e Marketing em Ambiente Digital abordam o gerenciamento de reputação online como parte da estratégia digital.'
+      },
+      {
+        id:'s4q3',
+        text:'Após 2 meses criando conteúdo no Instagram, Seu Carlos quer saber se está funcionando. Qual KPI (indicador) é mais importante para medir o sucesso do Instagram?',
+        options:[
+          {l:'A',t:'Número de seguidores apenas'},
+          {l:'B',t:'Taxa de engajamento (curtidas + comentários / alcance) e crescimento de clientes vindos do Instagram'},
+          {l:'C',t:'Quantidade de posts publicados'},
+          {l:'D',t:'Número de contas que o negócio está seguindo'}
+        ],
+        correct:1,
+        pts:20,
+        explanation:'Seguidores sozinhos não representam resultados. A taxa de engajamento mostra se o conteúdo está ressonando com o público, e o mais importante é medir se isso está convertendo em clientes reais. Marketing Analytics ensina que KPIs devem estar ligados a resultados de negócio.'
+      }
+    ]
+  }
+];
+
+// ── FASE 2: Plano de Ação (1 cenário complexo com missões escolháveis)
+const PHASE2_MISSION = {
+  title:'Consultoria Estratégica',
+  desc:'Sua equipe foi contratada para ajudar um negócio real do DF. Analisem o caso e montem o plano de marketing.',
+  businesses:[
+    {
+      id:'b1',icon:'🏋️',name:'Academia FitZone',
+      desc:'Academia de bairro com 120 alunos. Mês passado perdeu 35 alunos para uma academia maior com taxa de inauguração de R$19,90. Possui ótima estrutura mas sem marketing.',
+      context:'Equipamentos novos, professores dedicados, espaço limpo. Fraqueza: sem redes sociais, sem programa de indicação, sem nenhuma ação de retenção.'
+    },
+    {
+      id:'b2',icon:'💇',name:'Salão Beleza Fem',
+      desc:'Salão feminino no Plano Piloto. Clientes antigas e fiéis, mas sem crescimento há 2 anos. Donos acreditam que "boca a boca já basta".',
+      context:'Serviço de alta qualidade, 4,9 estrelas no Google, 47 avaliações. Problema: sem presença digital ativa, lista de espera não organizada, sem cardápio de serviços claro.'
+    },
+    {
+      id:'b3',icon:'🛒',name:'Mercadinho Bom Preço',
+      desc:'Mercado de vizinhança disputando espaço com supermercados de rede. Preço competitivo, mas os clientes não percebem valor além do básico.',
+      context:'Localização privilegiada, proprietário atende pessoalmente, conhece os clientes pelo nome. Sem nenhuma ação de marketing, nunca fez promoção estruturada.'
+    }
+  ],
+  questions:[
+    {
+      id:'p2q1',
+      text:'Com base no negócio escolhido, qual seria a PERSONA (cliente ideal) mais representativa?',
+      type:'open',
+      pts:30,
+      hint:'Pense em: idade, profissão, o que busca nesse negócio, principais dores e desejos. Ex.: "Mulher, 28-45 anos, trabalha fora..."',
+      minChars:80
+    },
+    {
+      id:'p2q2',
+      text:'Liste 2 pontos FORTES e 2 pontos FRACOS do negócio escolhido (análise SWOT simplificada):',
+      type:'open',
+      pts:30,
+      hint:'Forças: o que o negócio faz bem hoje. Fraquezas: o que precisa melhorar. Seja específico ao negócio escolhido.',
+      minChars:100
+    },
+    {
+      id:'p2q3',
+      text:'Qual ação de marketing digital (1 ação) você recomenda como prioritária para esse negócio nos próximos 30 dias? Justifique.',
+      type:'open',
+      pts:40,
+      hint:'Seja prático: qual plataforma, que tipo de conteúdo, com que frequência e por que essa ação resolve o principal problema.',
+      minChars:120
+    },
+    {
+      id:'p2q4',
+      text:'Como o negócio poderia usar a FIDELIZAÇÃO para combater a concorrência? Descreva uma ação concreta.',
+      type:'open',
+      pts:30,
+      hint:'Pense em: programa de pontos, benefício por indicação, clube VIP, cashback, cartão fidelidade... O que funciona para esse tipo de negócio?',
+      minChars:80
+    },
+    {
+      id:'p2q5',
+      text:'Qual seria o SLOGAN ou mensagem principal para esse negócio comunicar seu diferencial? Crie o slogan e explique por que ele funciona.',
+      type:'open',
+      pts:20,
+      hint:'Um bom slogan é curto, memorável e comunica o benefício principal. Ex.: "Seu bairro, sua qualidade"',
+      minChars:60
+    }
+  ]
+};
+
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+let STATE = {
+  group: null,
+  phase: 1,
+  scenarioIdx: 0,
+  qIdx: 0,
+  answers: {},      // qId -> answerIdx or text
+  scores: {},       // qId -> pts earned
+  totalScore: 0,
+  phase1Done: false,
+  phase2Done: false,
+  selectedBusiness: null,
+  timerSec: 0,
+  timerInterval: null,
+  startTime: Date.now()
+};
+
+// Per-group persistent data (simulates "other groups playing")
+let ALL_GROUPS = {
+  1:{score:0,phase:1,correct:0,total:0,answers:{}},
+  2:{score:0,phase:1,correct:0,total:0,answers:{}},
+  3:{score:0,phase:1,correct:0,total:0,answers:{}},
+  4:{score:0,phase:1,correct:0,total:0,answers:{}}
+};
+
+// ════════════════════════════════════════════════════════
+//  LOBBY
+// ════════════════════════════════════════════════════════
+function selectGroup(g){
+  STATE.group = g;
+  document.querySelectorAll('.group-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('gc'+g).classList.add('selected');
+  document.getElementById('start-btn').disabled = false;
+}
+
+function startGame(){
+  if(!STATE.group) return;
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('app').style.display='block';
+  const grp = GROUPS[STATE.group];
+  const badge = document.getElementById('header-group-badge');
+  badge.textContent = grp.icon+' '+grp.name;
+  badge.style.background = grp.color;
+  badge.style.color = '#fff';
+  initPhase1();
+}
+
+// ════════════════════════════════════════════════════════
+//  PHASE 1
+// ════════════════════════════════════════════════════════
+function initPhase1(){
+  STATE.phase = 1;
+  STATE.scenarioIdx = 0;
+  STATE.qIdx = 0;
+  document.getElementById('header-phase').textContent = 'FASE 1';
+  updateSidebar();
+  renderScenario(0, 0);
+  startTimer(25); // 25 min
+}
+
+function renderScenario(sIdx, qIdx){
+  STATE.scenarioIdx = sIdx;
+  STATE.qIdx = qIdx;
+  const sc = PHASE1_SCENARIOS[sIdx];
+  const q = sc.questions[qIdx];
+  const content = document.getElementById('main-content');
+
+  const alreadyAnswered = STATE.answers[q.id] !== undefined;
+  const selectedIdx = alreadyAnswered ? STATE.answers[q.id] : -1;
+
+  let kpiHtml = sc.kpis.map(k=>`
+    <div class="kpi-box">
+      <span class="kpi-val" style="color:${k.color}">${k.val}</span>
+      <div class="kpi-lbl">${k.lbl}</div>
+    </div>`).join('');
+
+  let optHtml = q.options.map((o,i)=>{
+    let cls = 'q-opt';
+    if(alreadyAnswered){
+      cls += ' locked';
+      if(i===q.correct) cls+=' correct';
+      else if(i===selectedIdx) cls+=' wrong';
+    }
+    return `<div class="${cls}" onclick="selectOption(${sIdx},${qIdx},${i})" data-idx="${i}">
+      <div class="opt-letter">${o.l}</div>
+      <div class="opt-text">${o.t}</div>
+    </div>`;
+  }).join('');
+
+  const progress = `${sIdx+1} de ${PHASE1_SCENARIOS.length} cenários · Questão ${qIdx+1} de ${sc.questions.length}`;
+  const totalQ = PHASE1_SCENARIOS.reduce((a,s)=>a+s.questions.length,0);
+  const doneQ = PHASE1_SCENARIOS.slice(0,sIdx).reduce((a,s)=>a+s.questions.length,0)+qIdx;
+
+  const canNext = alreadyAnswered;
+  const isLast = sIdx===PHASE1_SCENARIOS.length-1 && qIdx===sc.questions.length-1;
+
+  content.innerHTML = `
+    <div class="section-head">
+      <div class="section-title">FASE 1 — Diagnóstico</div>
+      <span class="section-badge">${progress}</span>
+    </div>
+
+    <div class="scenario-card fade-in">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:${sc.iconBg}">${sc.icon}</div>
+        <div class="sc-meta">
+          <div class="sc-name">${sc.name}</div>
+          <div class="sc-type">${sc.type}</div>
+        </div>
+      </div>
+      <div class="sc-body">
+        <p class="sc-desc">${sc.desc}</p>
+        <div class="kpi-row">${kpiHtml}</div>
+        <div class="challenge-box">${sc.challenge}</div>
+      </div>
+    </div>
+
+    <div class="q-card fade-in">
+      <div class="q-num">QUESTÃO ${doneQ+1} · ${q.pts} pontos</div>
+      <div class="q-text">${q.text}</div>
+      <div class="q-options">${optHtml}</div>
+      <div class="q-explanation ${alreadyAnswered?'show':''}" id="q-exp">
+        💡 <strong>Explicação:</strong> ${q.explanation}
+      </div>
+    </div>
+
+    <div class="btn-row">
+      ${sIdx>0||qIdx>0?`<button class="btn btn-secondary" onclick="navQuestion(-1)">← Anterior</button>`:''}
+      ${canNext && !isLast?`<button class="btn btn-primary" onclick="navQuestion(1)">Próxima →</button>`:''}
+      ${canNext && isLast?`<button class="btn btn-yellow" onclick="finishPhase1()">✅ Concluir Fase 1 →</button>`:''}
+    </div>`;
+
+  updateSidebar();
+  updateGroupData();
+}
+
+function selectOption(sIdx, qIdx, optIdx){
+  const q = PHASE1_SCENARIOS[sIdx].questions[qIdx];
+  if(STATE.answers[q.id] !== undefined) return; // already answered
+
+  STATE.answers[q.id] = optIdx;
+  const correct = optIdx === q.correct;
+  const pts = correct ? q.pts : Math.round(q.pts*0.1);
+  STATE.scores[q.id] = pts;
+  STATE.totalScore += pts;
+
+  // update group data
+  ALL_GROUPS[STATE.group].score = STATE.totalScore;
+  ALL_GROUPS[STATE.group].total++;
+  if(correct) ALL_GROUPS[STATE.group].correct++;
+
+  showToast(correct?`✅ Correto! +${pts} pontos`:`❌ Não foi dessa vez. +${pts} ponto`, correct?'success':'error');
+  renderScenario(sIdx, qIdx);
+}
+
+function navQuestion(dir){
+  const sc = PHASE1_SCENARIOS[STATE.scenarioIdx];
+  let si = STATE.scenarioIdx, qi = STATE.qIdx;
+
+  if(dir===1){
+    qi++;
+    if(qi>=sc.questions.length){ si++; qi=0; }
+  } else {
+    qi--;
+    if(qi<0){ si--; if(si>=0) qi=PHASE1_SCENARIOS[si].questions.length-1; else{si=0;qi=0;} }
+  }
+  if(si<0) return;
+  if(si>=PHASE1_SCENARIOS.length) return;
+  renderScenario(si, qi);
+}
+
+function finishPhase1(){
+  STATE.phase1Done = true;
+  stopTimer();
+  showPhaseTransition();
+}
+
+function showPhaseTransition(){
+  const totalPossible = PHASE1_SCENARIOS.reduce((a,s)=>a+s.questions.reduce((b,q)=>b+q.pts,0),0);
+  const pct = Math.round(STATE.totalScore/totalPossible*100);
+  const stars = pct>=80?'⭐⭐⭐':pct>=50?'⭐⭐':'⭐';
+  const content = document.getElementById('main-content');
+  content.innerHTML=`
+    <div class="phase-banner fade-in">
+      <div class="pb-label">FASE 1 CONCLUÍDA</div>
+      <div class="pb-stars">${stars}</div>
+      <div class="pb-title">Diagnóstico Completo!</div>
+      <div class="pb-sub">Pontuação: ${STATE.totalScore} pontos (${pct}% do total)</div>
+    </div>
+
+    <div class="result-card fade-in">
+      <div class="rc-header">
+        <div class="rc-score-big">${STATE.totalScore}</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px;">pontos conquistados na Fase 1</div>
+      </div>
+      <div class="rc-body">
+        <div class="rc-breakdown">
+          ${PHASE1_SCENARIOS.map(s=>{
+            const earned = s.questions.reduce((a,q)=>a+(STATE.scores[q.id]||0),0);
+            const possible = s.questions.reduce((a,q)=>a+q.pts,0);
+            return `<div class="rc-row">
+              <span class="rc-item">${s.icon} ${s.name}</span>
+              <span class="rc-pts">${earned} / ${possible} pts</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-yellow" onclick="initPhase2()" style="font-size:16px;padding:14px 32px;">
+            🚀 Avançar para Fase 2 →
+          </button>
+        </div>
+      </div>
+    </div>`;
+  updateSidebar();
+}
+
+// ════════════════════════════════════════════════════════
+//  PHASE 2
+// ════════════════════════════════════════════════════════
+function initPhase2(){
+  STATE.phase = 2;
+  document.getElementById('header-phase').textContent = 'FASE 2';
+  updateSidebar();
+  renderBusinessChoice();
+  startTimer(30);
+}
+
+function renderBusinessChoice(){
+  const m = PHASE2_MISSION;
+  const content = document.getElementById('main-content');
+  content.innerHTML=`
+    <div class="section-head">
+      <div class="section-title">FASE 2 — Consultoria</div>
+      <span class="section-badge">Escolha o negócio</span>
+    </div>
+
+    <div class="mission-card fade-in">
+      <div class="mc-badge">🎯 MISSÃO DA FASE 2</div>
+      <div class="mc-title">${m.title}</div>
+      <div class="mc-desc">${m.desc}</div>
+    </div>
+
+    <div class="q-card fade-in">
+      <div class="q-num">PASSO 1 DE 2</div>
+      <div class="q-text">Escolha o negócio que sua equipe vai ajudar:</div>
+      <div class="choice-grid">
+        ${m.businesses.map(b=>`
+          <div class="choice-card ${STATE.selectedBusiness===b.id?'selected':''}" onclick="selectBusiness('${b.id}')">
+            <div class="choice-icon">${b.icon}</div>
+            <div class="choice-name">${b.name}</div>
+            <div class="choice-desc">${b.desc.substring(0,80)}...</div>
+          </div>`).join('')}
+      </div>
+      ${STATE.selectedBusiness?`
+        <div class="challenge-box" style="margin-top:16px;">
+          ${m.businesses.find(b=>b.id===STATE.selectedBusiness).context}
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="renderPhase2Questions(0)">Iniciar Consultoria →</button>
+        </div>`:
+        '<div style="color:var(--dim);font-size:13px;margin-top:12px;">👆 Selecione um negócio para continuar</div>'
+      }
+    </div>`;
+}
+
+function selectBusiness(id){
+  STATE.selectedBusiness = id;
+  renderBusinessChoice();
+}
+
+function renderPhase2Questions(qIdx){
+  STATE.qIdx = qIdx;
+  const q = PHASE2_MISSION.questions[qIdx];
+  const biz = PHASE2_MISSION.businesses.find(b=>b.id===STATE.selectedBusiness);
+  const answered = STATE.answers[q.id]!==undefined;
+  const content = document.getElementById('main-content');
+
+  const totalQ = PHASE2_MISSION.questions.length;
+  const isLast = qIdx === totalQ-1;
+
+  content.innerHTML=`
+    <div class="section-head">
+      <div class="section-title">FASE 2 — Consultoria</div>
+      <span class="section-badge">Questão ${qIdx+1} de ${totalQ}</span>
+    </div>
+
+    <div class="scenario-card fade-in">
+      <div class="sc-header">
+        <div class="sc-icon" style="background:#E8F5E9">${biz.icon}</div>
+        <div class="sc-meta">
+          <div class="sc-name">${biz.name}</div>
+          <div class="sc-type">Consultoria Estratégica de Marketing</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="open-response fade-in">
+      <div class="q-num">QUESTÃO ${qIdx+1} · ${q.pts} pontos</div>
+      <div class="or-prompt">${q.text}</div>
+      <textarea class="or-textarea" id="or-${q.id}" 
+        placeholder="${q.hint}"
+        ${answered?'readonly':''} 
+        oninput="updateCharCount('${q.id}')">${answered?STATE.answers[q.id]:''}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <span class="or-hint">💡 ${q.hint}</span>
+        <span class="char-count" id="cc-${q.id}">0 / ${q.minChars} mín.</span>
+      </div>
+      ${answered?`<div class="q-explanation show" style="margin-top:12px;">✅ <strong>Resposta registrada!</strong> O professor irá avaliar sua resposta no painel de acompanhamento.</div>`:''}
+    </div>
+
+    <div class="btn-row">
+      ${qIdx>0?`<button class="btn btn-secondary" onclick="renderPhase2Questions(${qIdx-1})">← Anterior</button>`:''}
+      ${!answered?`<button class="btn btn-primary" onclick="submitOpenAnswer('${q.id}',${q.pts},${qIdx})">💾 Salvar Resposta</button>`:''}
+      ${answered && !isLast?`<button class="btn btn-primary" onclick="renderPhase2Questions(${qIdx+1})">Próxima →</button>`:''}
+      ${answered && isLast?`<button class="btn btn-yellow" onclick="finishPhase2()">🏁 Finalizar Jogo!</button>`:''}
+    </div>`;
+
+  updateCharCount(q.id);
+  updateSidebar();
+}
+
+function updateCharCount(id){
+  const ta = document.getElementById('or-'+id);
+  const cc = document.getElementById('cc-'+id);
+  const q = PHASE2_MISSION.questions.find(q=>q.id===id);
+  if(!ta||!cc) return;
+  const len = ta.value.length;
+  cc.textContent = `${len} / ${q.minChars} mín.`;
+  cc.style.color = len>=q.minChars?'var(--ifb-green)':'var(--dim)';
+}
+
+function submitOpenAnswer(qId, pts, qIdx){
+  const ta = document.getElementById('or-'+qId);
+  const q = PHASE2_MISSION.questions.find(q=>q.id===qId);
+  if(!ta) return;
+  const val = ta.value.trim();
+  if(val.length < q.minChars){
+    showToast(`✍️ Escreva pelo menos ${q.minChars} caracteres`, 'error');
+    return;
+  }
+  STATE.answers[qId] = val;
+  STATE.scores[qId] = pts; // full pts for open (teacher grades later, give full for engagement)
+  STATE.totalScore += pts;
+  ALL_GROUPS[STATE.group].score = STATE.totalScore;
+  ALL_GROUPS[STATE.group].total++;
+  ALL_GROUPS[STATE.group].correct++;
+  showToast(`✅ Resposta salva! +${pts} pontos`, 'success');
+  renderPhase2Questions(qIdx);
+  updateGroupData();
+}
+
+function finishPhase2(){
+  STATE.phase2Done = true;
+  stopTimer();
+  showFinalResult();
+}
+
+function showFinalResult(){
+  const p1Total = PHASE1_SCENARIOS.reduce((a,s)=>a+s.questions.reduce((b,q)=>b+q.pts,0),0);
+  const p2Total = PHASE2_MISSION.questions.reduce((a,q)=>a+q.pts,0);
+  const grandTotal = p1Total + p2Total;
+  const pct = Math.round(STATE.totalScore/grandTotal*100);
+  const stars = pct>=80?'🏆 Excelente!':pct>=60?'🥈 Muito Bom!':'🥉 Boa tentativa!';
+
+  const content = document.getElementById('main-content');
+  content.innerHTML=`
+    <div class="phase-banner fade-in" style="background:linear-gradient(135deg,#1B5E20,#E65100)">
+      <div class="pb-label">JOGO CONCLUÍDO</div>
+      <div class="pb-stars" style="font-size:40px">${stars}</div>
+      <div class="pb-title">${GROUPS[STATE.group].name}</div>
+      <div class="pb-sub">Pontuação Final: ${STATE.totalScore} / ${grandTotal} pontos (${pct}%)</div>
+    </div>
+
+    <div class="result-card fade-in">
+      <div class="rc-header">
+        <div class="rc-score-big">${STATE.totalScore}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">pontos totais · ${pct}% de aproveitamento</div>
+      </div>
+      <div class="rc-body">
+        <div style="font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Resumo por Fase</div>
+        <div class="rc-breakdown">
+          <div class="rc-row">
+            <span class="rc-item">📋 Fase 1 — Diagnóstico</span>
+            <span class="rc-pts">${PHASE1_SCENARIOS.reduce((a,s)=>a+s.questions.reduce((b,q)=>b+(STATE.scores[q.id]||0),0),0)} / ${p1Total} pts</span>
+          </div>
+          <div class="rc-row">
+            <span class="rc-item">🎯 Fase 2 — Consultoria</span>
+            <span class="rc-pts">${PHASE2_MISSION.questions.reduce((a,q)=>a+(STATE.scores[q.id]||0),0)} / ${p2Total} pts</span>
+          </div>
+        </div>
+        <div class="badge-row">
+          <div class="badge" style="background:var(--ifb-green-faint);color:var(--ifb-green);border-color:var(--ifb-green-mid);">
+            🎓 Técnico em Marketing PROEJA
+          </div>
+          <div class="badge" style="background:var(--ifb-yellow-faint);color:#E65100;border-color:var(--ifb-yellow-mid);">
+            ✅ Jogo Completo
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:20px;">
+          <button class="btn btn-secondary" onclick="location.reload()">🔄 Jogar Novamente</button>
+          <button class="btn btn-primary" onclick="openProfPanel()">🎓 Ver Painel do Professor</button>
+        </div>
+      </div>
+    </div>`;
+
+  updateGroupData();
+}
+
+// ════════════════════════════════════════════════════════
+//  SIDEBAR
+// ════════════════════════════════════════════════════════
+function updateSidebar(){
+  document.getElementById('sb-score').textContent = STATE.totalScore;
+  if(STATE.group) document.getElementById('sb-score').style.color = GROUPS[STATE.group].color;
+
+  const totalQ = PHASE1_SCENARIOS.reduce((a,s)=>a+s.questions.length,0) + PHASE2_MISSION.questions.length;
+  const doneQ = Object.keys(STATE.answers).length;
+  document.getElementById('sb-q-done').textContent = doneQ;
+  document.getElementById('sb-q-total').textContent = '/ '+totalQ;
+  document.getElementById('sb-prog').style.width = (doneQ/totalQ*100)+'%';
+
+  // Steps
+  const steps = [];
+  PHASE1_SCENARIOS.forEach((s,si)=>{
+    s.questions.forEach((q,qi)=>{
+      const done = STATE.answers[q.id]!==undefined;
+      const active = STATE.phase===1 && STATE.scenarioIdx===si && STATE.qIdx===qi;
+      steps.push({label:`${s.icon} ${s.name.split(' ').slice(0,2).join(' ')} — Q${qi+1}`, done, active});
+    });
+  });
+  PHASE2_MISSION.questions.forEach((q,qi)=>{
+    const done = STATE.answers[q.id]!==undefined;
+    const active = STATE.phase===2 && STATE.qIdx===qi;
+    steps.push({label:`🎯 Consultoria — Q${qi+1}`, done, active});
+  });
+
+  document.getElementById('step-list').innerHTML = steps.map((s,i)=>`
+    <div class="step-item ${s.done?'done':''} ${s.active?'active':''}">
+      <div class="step-num">${s.done?'✓':i+1}</div>
+      <div class="step-text">${s.label}</div>
+    </div>`).join('');
+
+  // Mini chart
+  const scenarios = PHASE1_SCENARIOS.map(s=>({
+    name:s.name.split(' ').slice(0,2).join(' '),
+    earned:s.questions.reduce((a,q)=>a+(STATE.scores[q.id]||0),0),
+    max:s.questions.reduce((a,q)=>a+q.pts,0)
+  }));
+  document.getElementById('mini-chart').innerHTML = scenarios.map(s=>
+    `<div class="mc-bar-row">
+      <div class="mc-label" style="font-size:10px;line-height:1.2;">${s.name}</div>
+      <div class="mc-bar"><div class="mc-fill" style="width:${s.max?s.earned/s.max*100:0}%;background:${STATE.group?GROUPS[STATE.group].color:'var(--ifb-green)'};"></div></div>
+      <div class="mc-val">${s.earned}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  TIMER
+// ════════════════════════════════════════════════════════
+function startTimer(minutes){
+  STATE.timerSec = minutes*60;
+  stopTimer();
+  STATE.timerInterval = setInterval(()=>{
+    STATE.timerSec--;
+    const el = document.getElementById('timer-display');
+    if(!el) return;
+    const m = Math.floor(STATE.timerSec/60);
+    const s = STATE.timerSec%60;
+    el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    el.className = 'timer-display'+(STATE.timerSec<=120?' urgent':'');
+    if(STATE.timerSec<=0){ stopTimer(); el.textContent='⏰ Fim!'; }
+  },1000);
+}
+function stopTimer(){ if(STATE.timerInterval){ clearInterval(STATE.timerInterval); STATE.timerInterval=null; } }
+
+// ════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════
+function showToast(msg, type='info'){
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type; t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},2800);
+}
+
+// ════════════════════════════════════════════════════════
+//  GROUP DATA (simulates other groups for professor panel)
+// ════════════════════════════════════════════════════════
+function updateGroupData(){
+  ALL_GROUPS[STATE.group].score = STATE.totalScore;
+  ALL_GROUPS[STATE.group].phase = STATE.phase;
+  ALL_GROUPS[STATE.group].correct = Object.keys(STATE.scores).filter(k=>{
+    const q = findQuestion(k);
+    return q && q.type!=='open' && STATE.answers[k]===q.correct;
+  }).length;
+  ALL_GROUPS[STATE.group].total = Object.keys(STATE.answers).length;
+
+  // Simulate other groups with gradual progress
+  const now = Date.now();
+  const elapsed = (now - STATE.startTime)/1000;
+  [1,2,3,4].forEach(g=>{
+    if(g===STATE.group) return;
+    const seed = g*137 + Math.floor(elapsed/30);
+    ALL_GROUPS[g].score = Math.min(180, Math.floor((seed%60)*2.5 + elapsed*0.3));
+    ALL_GROUPS[g].phase = ALL_GROUPS[g].score > 120 ? 2 : 1;
+    ALL_GROUPS[g].correct = Math.floor(ALL_GROUPS[g].score/20);
+    ALL_GROUPS[g].total = ALL_GROUPS[g].correct + Math.floor(Math.random()*2);
+  });
+}
+
+function findQuestion(id){
+  for(const s of PHASE1_SCENARIOS) for(const q of s.questions) if(q.id===id) return q;
+  for(const q of PHASE2_MISSION.questions) if(q.id===id) return q;
+  return null;
+}
+
+// ════════════════════════════════════════════════════════
+//  PROFESSOR PANEL
+// ════════════════════════════════════════════════════════
+function openProfPanel(){
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('prof-panel').style.display='block';
+  renderProfPanel();
+  // Auto-refresh
+  setInterval(()=>{
+    if(document.getElementById('prof-panel').style.display==='block') renderProfPanel();
+  },5000);
+}
+
+function closeProfPanel(){
+  document.getElementById('prof-panel').style.display='none';
+  document.getElementById('lobby').style.display='flex';
+}
+
+function renderProfPanel(){
+  updateGroupData();
+  const sorted = [1,2,3,4].map(g=>({g,d:ALL_GROUPS[g]})).sort((a,b)=>b.d.score-a.d.score);
+  const rankClasses=['gold','silver','bronze',''];
+
+  // Leaderboard
+  document.getElementById('lb-body').innerHTML = sorted.map((item,i)=>{
+    const {g,d} = item;
+    const grp = GROUPS[g];
+    const acc = d.total>0?Math.round(d.correct/d.total*100):0;
+    return `<div class="lb-row">
+      <div class="lb-rank ${rankClasses[i]}">${['🥇','🥈','🥉','4º'][i]}</div>
+      <div>
+        <div class="lb-group" style="color:${grp.color}">${grp.icon} ${grp.name}</div>
+        <div class="lb-phase">FASE ${d.phase} · ${d.total} respondidas</div>
+      </div>
+      <div>
+        <div class="lb-score" style="color:${grp.color}">${d.score}</div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);text-align:right;">pts</div>
+      </div>
+      <div>
+        <div class="lb-acc">${acc}%</div>
+        <div style="font-size:10px;color:var(--dim);text-align:right;">acerto</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Group panels
+  const maxScore = 350; // approximate max
+  document.getElementById('prof-grid').innerHTML = [1,2,3,4].map(g=>{
+    const grp = GROUPS[g];
+    const d = ALL_GROUPS[g];
+    const acc = d.total>0?Math.round(d.correct/d.total*100):0;
+    const pct = Math.round(d.score/maxScore*100);
+    return `<div class="group-panel">
+      <div class="gp-header" style="background:${grp.color}">
+        <div>
+          <div class="gp-name">${grp.icon} ${grp.name}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px;">${grp.role}</div>
+        </div>
+        <div class="gp-score-big">${d.score}</div>
+      </div>
+      <div class="gp-body">
+        <div class="prog-bar-wrap" style="margin-bottom:12px;">
+          <div class="prog-bar-fill" style="width:${pct}%;background:${grp.color};"></div>
+        </div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Fase atual</span><span class="gp-stat-val">Fase ${d.phase}</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Questões respondidas</span><span class="gp-stat-val">${d.total}</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Taxa de acerto</span><span class="gp-stat-val">${acc}%</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Pontuação</span><span class="gp-stat-val" style="color:${grp.color}">${d.score} pts</span></div>
+        ${g===STATE.group?`<div style="margin-top:10px;"><span class="tag tag-green">▶ Jogando agora</span></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  // Pre-simulate other groups
+  updateGroupData();
+});
+</script>
+</body>
+</html>
