@@ -1114,9 +1114,8 @@ function goFromInstructions(){
   badge.textContent = grp.icon+' '+grp.name;
   badge.style.background = grp.color;
   badge.style.color = '#fff';
-  // Salva turma e participantes imediatamente no Supabase
-  saveIdentificacao();
-  initPhase1();
+  // Carrega progresso salvo e só depois inicia
+  loadProgressFromSupabase().then(()=> initPhase1());
 }
 
 function goBackToLobby(){
@@ -1129,13 +1128,37 @@ function goBackToLobby(){
 //  PHASE 1
 // ════════════════════════════════════════════════════════
 function initPhase1(){
+  // Se já concluiu a fase 2, mostra tela final
+  if(STATE.phase2Done){
+    document.getElementById('header-phase').textContent = 'FASE 2';
+    updateSidebar();
+    showToast('🏆 Vocês já concluíram o jogo!', 'success');
+    initPhase2();
+    return;
+  }
+  // Se já concluiu a fase 1, vai direto para fase 2
+  if(STATE.phase1Done){
+    document.getElementById('header-phase').textContent = 'FASE 2';
+    updateSidebar();
+    initPhase2();
+    return;
+  }
+  // Se já tem pontuação/respostas, vai para as questões da fase 1
+  if(STATE.totalScore > 0 || Object.keys(STATE.answers).some(k=>!k.startsWith('persona_'))){
+    STATE.phase = 1;
+    document.getElementById('header-phase').textContent = 'FASE 1';
+    updateSidebar();
+    startPhase1Questions();
+    return;
+  }
+  // Primeira vez — começa pelas personas
   STATE.phase = 1;
   STATE.scenarioIdx = 0;
   STATE.qIdx = 0;
   document.getElementById('header-phase').textContent = 'FASE 0';
   updateSidebar();
-  renderPersonaPhase(0); // start with persona before questions
-  startTimer(10); // 10 min for persona
+  renderPersonaPhase(0);
+  startTimer(10);
 }
 
 // ════════════════════════════════════════════════════════
@@ -1221,25 +1244,86 @@ function renderPersonaPhase(sIdx){
   updateSidebar();
 }
 
-// Salva só identificação (turma + participantes) — chamado logo ao iniciar
-async function saveIdentificacao(){
+// Carrega progresso salvo do Supabase e restaura STATE
+async function loadProgressFromSupabase(){
   if(!STATE.group) return;
-  await sbFetch('/rest/v1/game_progress', 'POST', {
-    grupo: STATE.group,
-    grupo_nome: GROUPS[STATE.group].name,
-    turma: STATE.turma || '',
-    participantes: STATE.participantes || [],
-    pontuacao: 0,
-    fase: 1,
-    acertos: 0,
-    total_respondidas: 0,
-    negocio_escolhido: '',
-    respostas_abertas: {},
-    personas: {},
-    fase1_concluida: false,
-    fase2_concluida: false,
-    atualizado_em: new Date().toISOString()
-  });
+  showToast('⏳ Carregando progresso salvo...', 'info');
+  const data = await sbFetch(`/rest/v1/game_progress?grupo=eq.${STATE.group}&select=*`);
+  if(!data || !Array.isArray(data) || data.length === 0) {
+    // Primeira vez — só cria o registro
+    await sbFetch('/rest/v1/game_progress', 'POST', {
+      grupo: STATE.group,
+      grupo_nome: GROUPS[STATE.group].name,
+      turma: STATE.turma || '',
+      participantes: STATE.participantes || [],
+      pontuacao: 0,
+      fase: 1,
+      acertos: 0,
+      total_respondidas: 0,
+      negocio_escolhido: '',
+      respostas_abertas: {},
+      personas: {},
+      fase1_concluida: false,
+      fase2_concluida: false,
+      atualizado_em: new Date().toISOString()
+    });
+    showToast('✅ Novo jogo iniciado!', 'success');
+    return;
+  }
+
+  const saved = data[0];
+
+  // Restaura turma e participantes se não foram preenchidos agora
+  if(!STATE.turma && saved.turma) STATE.turma = saved.turma;
+  if((!STATE.participantes || STATE.participantes.length===0) && saved.participantes && saved.participantes.length > 0){
+    STATE.participantes = saved.participantes;
+  }
+
+  // Restaura pontuação e progresso
+  STATE.totalScore = saved.pontuacao || 0;
+  STATE.phase = saved.fase || 1;
+  STATE.phase1Done = saved.fase1_concluida || false;
+  STATE.phase2Done = saved.fase2_concluida || false;
+  STATE.selectedBusiness = saved.negocio_escolhido || null;
+
+  // Restaura personas no STATE.answers
+  if(saved.personas && typeof saved.personas === 'object'){
+    Object.entries(saved.personas).forEach(([scId, pData])=>{
+      STATE.answers['persona_'+scId] = pData;
+    });
+  }
+
+  // Restaura respostas abertas da fase 2
+  if(saved.respostas_abertas && typeof saved.respostas_abertas === 'object'){
+    Object.entries(saved.respostas_abertas).forEach(([qId, resp])=>{
+      STATE.answers[qId] = resp;
+    });
+  }
+
+  // Atualiza turma/participantes no Supabase se foram preenchidos agora
+  if(STATE.turma || (STATE.participantes && STATE.participantes.length > 0)){
+    await sbFetch('/rest/v1/game_progress', 'POST', {
+      grupo: STATE.group,
+      grupo_nome: GROUPS[STATE.group].name,
+      turma: STATE.turma || saved.turma || '',
+      participantes: (STATE.participantes && STATE.participantes.length > 0) ? STATE.participantes : (saved.participantes || []),
+      pontuacao: STATE.totalScore,
+      fase: STATE.phase,
+      acertos: saved.acertos || 0,
+      total_respondidas: saved.total_respondidas || 0,
+      negocio_escolhido: STATE.selectedBusiness || '',
+      respostas_abertas: saved.respostas_abertas || {},
+      personas: saved.personas || {},
+      fase1_concluida: STATE.phase1Done,
+      fase2_concluida: STATE.phase2Done,
+      atualizado_em: new Date().toISOString()
+    });
+  }
+
+  const msg = STATE.phase1Done ? '✅ Progresso restaurado — vocês estão na Fase 2!' :
+              STATE.totalScore > 0 ? `✅ Progresso restaurado — ${STATE.totalScore} pts recuperados!` :
+              '✅ Grupo carregado!';
+  showToast(msg, 'success');
 }
 
 function savePersona(sIdx){
