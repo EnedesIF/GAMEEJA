@@ -493,19 +493,24 @@ const SUPA_URL = 'https://zrahlmmwywbyklciqxfk.supabase.co';
 const SUPA_KEY = 'sb_publishable_SHHOkIqEtS4LkMUK-AtFmw_noc_ZK2y';
 
 async function sbFetch(path, method='GET', body=null){
+  // Para POST na game_progress, usa upsert via on_conflict
+  let url = SUPA_URL + path;
+  if(method==='POST' && path.includes('game_progress')){
+    url += '?on_conflict=grupo';
+  }
   const opts = {
     method,
     headers:{
       'apikey': SUPA_KEY,
       'Authorization': 'Bearer '+SUPA_KEY,
       'Content-Type': 'application/json',
-      'Prefer': method==='POST' ? 'resolution=merge-duplicates' : ''
+      'Prefer': method==='POST' ? 'resolution=merge-duplicates,return=minimal' : ''
     }
   };
   if(body) opts.body = JSON.stringify(body);
   try {
-    const r = await fetch(SUPA_URL+path, opts);
-    if(!r.ok){ const t=await r.text(); console.warn('Supabase:',t); return null; }
+    const r = await fetch(url, opts);
+    if(!r.ok){ const t=await r.text(); console.warn('Supabase erro:',r.status, t); return null; }
     return r.status===204 ? true : r.json();
   } catch(e){ console.warn('Supabase offline:',e); return null; }
 }
