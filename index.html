@@ -295,10 +295,34 @@ h1,h2,h3,.label{font-family:'Oswald',sans-serif;}
     </div>
   </div>
 
+  <!-- ── IDENTIFICAÇÃO DO GRUPO ── -->
+  <div id="team-form" style="display:none;max-width:600px;width:100%;margin-bottom:24px;animation:fadeIn .4s ease;">
+    <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:20px 24px;">
+      <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:14px;">📝 Identificação do Grupo</div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;color:rgba(255,255,255,.75);font-weight:600;letter-spacing:.5px;display:block;margin-bottom:6px;">TURMA</label>
+        <input id="input-turma" type="text" placeholder="Ex: PROEJA Marketing 2025 · Noturno"
+          style="width:100%;padding:10px 14px;border-radius:8px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-family:'Source Sans 3',sans-serif;font-size:14px;outline:none;transition:border-color .2s;"
+          onfocus="this.style.borderColor='var(--ifb-yellow)'" onblur="this.style.borderColor='rgba(255,255,255,.2)'"
+          oninput="updateTeamForm()">
+      </div>
+
+      <div>
+        <label style="font-size:12px;color:rgba(255,255,255,.75);font-weight:600;letter-spacing:.5px;display:block;margin-bottom:6px;">PARTICIPANTES <span style="font-weight:400;opacity:.7;">(um por linha)</span></label>
+        <textarea id="input-participantes" rows="4" placeholder="Ana Silva&#10;Carlos Oliveira&#10;Maria Santos&#10;João Pedro"
+          style="width:100%;padding:10px 14px;border-radius:8px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-family:'Source Sans 3',sans-serif;font-size:14px;outline:none;resize:vertical;line-height:1.6;transition:border-color .2s;"
+          onfocus="this.style.borderColor='var(--ifb-yellow)'" onblur="this.style.borderColor='rgba(255,255,255,.2)'"
+          oninput="updateTeamForm()"></textarea>
+        <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:5px;" id="participant-count">0 participantes</div>
+      </div>
+    </div>
+  </div>
+
   <button class="lobby-btn" id="start-btn" onclick="startGame()" disabled>
     ▶ INICIAR JOGO
   </button>
-  <div class="lobby-hint">Selecione seu grupo para começar</div>
+  <div class="lobby-hint" id="lobby-hint">Selecione seu grupo para começar</div>
   <button class="prof-btn" onclick="openProfPanel()">🎓 Painel do Professor</button>
 </div>
 
@@ -816,7 +840,10 @@ let STATE = {
   livesLost: 0,        // quantas anulações aconteceram
   totalWrong: 0,       // erros totais
   avatarMood: 'idle',  // idle | happy | sad | worried | celebrate
-  currentAvatar: null  // avatar do cenário atual
+  currentAvatar: null,  // avatar do cenário atual
+  // ── IDENTIFICAÇÃO
+  turma: '',
+  participantes: []
 };
 
 // Local cache of all groups for prof panel
@@ -1045,7 +1072,23 @@ function selectGroup(g){
   STATE.group = g;
   document.querySelectorAll('.group-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('gc'+g).classList.add('selected');
+  // Show team form
+  document.getElementById('team-form').style.display = 'block';
+  document.getElementById('lobby-hint').textContent = 'Preencha os dados e clique em Iniciar';
   document.getElementById('start-btn').disabled = false;
+  // Pre-fill if already had data
+  updateTeamForm();
+}
+
+function updateTeamForm(){
+  const turma = (document.getElementById('input-turma')?.value || '').trim();
+  const raw   = (document.getElementById('input-participantes')?.value || '');
+  const nomes = raw.split('\n').map(s=>s.trim()).filter(s=>s.length > 0);
+  const countEl = document.getElementById('participant-count');
+  if(countEl) countEl.textContent = nomes.length + (nomes.length===1?' participante':' participantes');
+  // Save to STATE
+  STATE.turma = turma;
+  STATE.participantes = nomes;
 }
 
 function startGame(){
@@ -1690,6 +1733,8 @@ async function saveProgressToSupabase(){
   await sbFetch('/rest/v1/game_progress', 'POST', {
     grupo: STATE.group,
     grupo_nome: GROUPS[STATE.group].name,
+    turma: STATE.turma || '',
+    participantes: STATE.participantes || [],
     pontuacao: STATE.totalScore,
     fase: STATE.phase,
     acertos: correct,
@@ -1714,7 +1759,9 @@ async function loadAllGroupsFromSupabase(){
       negocio: row.negocio_escolhido || '',
       respostas: row.respostas_abertas || {},
       fase1Done: row.fase1_concluida || false,
-      fase2Done: row.fase2_concluida || false
+      fase2Done: row.fase2_concluida || false,
+      turma: row.turma || '',
+      participantes: row.participantes || []
     };
   });
 }
@@ -1756,7 +1803,7 @@ async function renderProfPanel(){
       <div class="lb-rank ${rankClasses[i]}">${['🥇','🥈','🥉','4º'][i]}</div>
       <div>
         <div class="lb-group" style="color:${grp.color}">${grp.icon} ${grp.name}</div>
-        <div class="lb-phase">FASE ${d.phase||1} · ${d.total||0} respondidas</div>
+        <div class="lb-phase">FASE ${d.phase||1} · ${d.total||0} respondidas${d.turma?' · '+d.turma:''}</div>
       </div>
       <div>
         <div class="lb-score" style="color:${grp.color}">${d.score||0}</div>
@@ -1807,8 +1854,16 @@ async function renderProfPanel(){
         <div class="gp-stat-row"><span class="gp-stat-lbl">Fase atual</span><span class="gp-stat-val">Fase ${d.phase||1}</span></div>
         <div class="gp-stat-row"><span class="gp-stat-lbl">Questões respondidas</span><span class="gp-stat-val">${d.total||0}</span></div>
         <div class="gp-stat-row"><span class="gp-stat-lbl">Taxa de acerto</span><span class="gp-stat-val">${acc}%</span></div>
+        <div class="gp-stat-row"><span class="gp-stat-lbl">Turma</span><span class="gp-stat-val">${d.turma||'—'}</span></div>
         <div class="gp-stat-row"><span class="gp-stat-lbl">Negócio escolhido</span><span class="gp-stat-val">${d.negocio||'—'}</span></div>
         <div class="gp-stat-row"><span class="gp-stat-lbl">Pontuação</span><span class="gp-stat-val" style="color:${grp.color};font-weight:700;">${d.score||0} pts</span></div>
+        ${d.participantes && d.participantes.length > 0 ? `
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">👥 Participantes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            ${d.participantes.map(n=>`<span style="background:${grp.color}18;border:1px solid ${grp.color}44;color:${grp.color};padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;">${n}</span>`).join('')}
+          </div>
+        </div>` : ''}
         ${d.fase2Done?'<div style="margin-top:8px;"><span class="tag tag-green">✅ Concluído</span></div>':
           d.fase1Done?'<div style="margin-top:8px;"><span class="tag tag-yellow">🎯 Na Fase 2</span></div>':
           d.total>0?'<div style="margin-top:8px;"><span style="font-size:11px;color:var(--muted);">▶ Jogando Fase 1</span></div>':
