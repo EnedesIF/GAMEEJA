@@ -511,7 +511,11 @@ async function sbFetch(path, method='GET', body=null){
   try {
     const r = await fetch(url, opts);
     if(!r.ok){ const t=await r.text(); console.warn('Supabase erro:',r.status, t); return null; }
-    return r.status===204 ? true : r.json();
+    if(r.status===204) return true;
+    const t = await r.text();
+    if(!t) return true; // corpo vazio (ex.: POST sem Prefer:return=representation) — sucesso sem dados
+    try { return JSON.parse(t); }
+    catch(e){ console.warn('Supabase resposta não-JSON:',t); return true; }
   } catch(e){ console.warn('Supabase offline:',e); return null; }
 }
 
